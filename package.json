@@ -1,0 +1,35 @@
+{
+  "name": "mock-rest-middleware",
+  "description": "Simple middleware for mocking REST services",
+  "version": "1.0.0",
+  "homepage": "https://github.com/Banno/node-mock-rest-middleware",
+  "license": "Apache-2.0",
+  "contributors": [
+    "Eric Heikes <eric.heikes@banno.com>"
+  ],
+  "main": "index.js",
+  "keywords": [
+    "api",
+    "banno",
+    "connect",
+    "rest",
+    "middleware"
+  ],
+  "scripts": {
+    "lint": "ux-lint *.js test/*.js --extend .lintrc",
+    "test": "JASMINE_CONFIG_PATH=test/jasmine.json jasmine"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "jasmine": "^2.4.1",
+    "ux-lint": "github:banno/ux-lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Banno/node-mock-rest-middleware"
+  },
+  "bugs": {
+    "url": "https://github.com/Banno/node-mock-rest-middleware/issues"
+  }
+}
