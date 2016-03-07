@@ -31,7 +31,14 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 };
 
 Middleware.prototype.getMiddleware = function() {
-	return [];
+	return this.rules.map(function(rule) {
+		return function(req, res, next) {
+			if (rule.path.test(req.url)) {
+				return;
+			}
+			next();
+		};
+	});
 };
 
 module.exports = function() {
