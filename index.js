@@ -1,11 +1,16 @@
 'use strict';
 
 function MiddlewareRule(path, collection) {
-	this.path = path;
+	if (typeof path === 'string') {
+		this.path = new RegExp(path);
+	} else {
+		this.path = path;
+	}
 	this.collection = collection;
 }
 
 function Middleware() {
+	this.MiddlewareRule = MiddlewareRule; // mainly for testing
 	this.rules = [];
 }
 
