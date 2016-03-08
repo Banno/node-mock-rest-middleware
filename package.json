@@ -19,7 +19,9 @@
     "lint": "ux-lint *.js test/*.js --extend .lintrc",
     "test": "JASMINE_CONFIG_PATH=test/jasmine.json jasmine"
   },
-  "dependencies": {},
+  "dependencies": {
+    "path-to-regexp": "^1.2.1"
+  },
   "devDependencies": {
     "connect": "^3.4.1",
     "jasmine": "^2.4.1",

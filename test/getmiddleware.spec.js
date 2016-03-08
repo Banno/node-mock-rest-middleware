@@ -3,16 +3,30 @@ describe('getMiddleware()', function() {
 
 	var middleware = require('../');
 
-	var mocks, collection, path, response, next, handler;
+	var mocks, collection, path, response, next;
+
+	var runHandlers = function(req, res, next) {
+		var middleware = mocks.getMiddleware();
+		for (var i = 0; i < middleware.length; i++) {
+			next.calls.reset();
+			middleware[i](req, res, next);
+			if (!next.calls.any()) {
+				break;
+			}
+		}
+	};
+
+	var getResponseData = function() {
+		return response.end.calls.argsFor(0)[0] ? JSON.parse(response.end.calls.argsFor(0)[0]) : undefined;
+	};
 
 	beforeEach(function() {
 		path = '/foo';
-		collection = [{ foo: 1, bar: 2 }, { foo: 3, bar: 4 }];
+		collection = [{ id: 42, foo: 1, bar: 2 }, { id: 77, foo: 3, bar: 4 }];
 		mocks = middleware();
 		mocks.addResource(path, collection);
 		response = jasmine.createSpyObj('serverResponse', ['end', 'setHeader', 'write', 'writeHead']);
 		next = jasmine.createSpy('next() callback');
-		handler = mocks.getMiddleware()[0];
 	});
 
 	it('should return an array of functions', function() {
@@ -30,23 +44,13 @@ describe('getMiddleware()', function() {
 		}).not.toThrow();
 	});
 
-	it('should handle matching URLs', function() {
-		handler({ url: path }, response, next);
-		expect(next).not.toHaveBeenCalled();
-	});
-
-	it('should NOT handle unrelated URLs', function() {
-		handler({ url: '/other' }, response, next);
-		expect(next).toHaveBeenCalled();
-	});
-
 	describe('GET /path', function() {
 
 		var responseData;
 
 		beforeEach(function() {
-			handler({ url: path, method: 'GET' }, response, next);
-			responseData = JSON.parse(response.end.calls.argsFor(0)[0]);
+			runHandlers({ url: path, method: 'GET' }, response, next);
+			responseData = getResponseData();
 		});
 
 		it('should respond with an object with "items" and "total" properties', function() {
@@ -73,10 +77,49 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('unknown method', function() {
+	describe('GET /path/:id', function() {
+
+		var responseData;
+
+		describe('when an item with that ID exists', function() {
+
+			beforeEach(function() {
+				runHandlers({ url: path + '/' + collection[0].id, method: 'GET' }, response, next);
+				responseData = getResponseData();
+			});
+
+			it('should respond with the matching object', function() {
+				expect(responseData).toEqual(collection[0]);
+			});
+
+			it('should respond with a 200 code', function() {
+				expect(response.writeHead).toHaveBeenCalledWith(200);
+			});
+
+			it('should respond with an application/json type', function() {
+				expect(response.setHeader).toHaveBeenCalledWith('Content-Type', 'application/json');
+			});
+
+		});
+
+		describe('when an item with that ID cannot be found', function() {
+
+			beforeEach(function() {
+				runHandlers({ url: path + '/nonexistent', method: 'GET' }, response, next);
+			});
+
+			it('should respond with a 404 code', function() {
+				expect(response.writeHead).toHaveBeenCalledWith(404);
+			});
+
+		});
+
+	});
+
+	describe('unknown methods', function() {
 
 		beforeEach(function() {
-			handler({ url: path, method: 'FOO' }, response, next);
+			runHandlers({ url: path, method: 'FOO' }, response, next);
 		});
 
 		it('should respond with a 405 code', function() {

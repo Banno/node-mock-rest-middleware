@@ -1,11 +1,9 @@
 'use strict';
 
+var pathToRegexp = require('path-to-regexp');
+
 function MiddlewareRule(path, collection) {
-	if (typeof path === 'string') {
-		this.path = new RegExp(path);
-	} else {
-		this.path = path;
-	}
+	this.path = new RegExp(path);
 	this.collection = collection;
 }
 
@@ -14,7 +12,11 @@ function Middleware() {
 	this.rules = [];
 }
 
-function getCollection(res) {
+function getId(params) {
+	return params[1];
+}
+
+function getCollection(params, res) {
 	/* jshint validthis:true */
 	var data = {
 		items: this.collection,
@@ -22,6 +24,21 @@ function getCollection(res) {
 	};
 	res.writeHead(200);
 	res.end(JSON.stringify(data));
+}
+
+function getItem(params, res) {
+	/* jshint validthis:true */
+	var id = getId(params);
+	var filtered = this.collection.filter(function(item) {
+		return String(item.id) === id;
+	});
+	if (filtered.length > 0) {
+		res.writeHead(200);
+		res.end(JSON.stringify(filtered[0]));
+	} else {
+		res.writeHead(404);
+		res.end();
+	}
 }
 
 Middleware.prototype.addResource = function(path, collection, opts) {
@@ -34,19 +51,30 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 	}
 
 	this.rules.push(new MiddlewareRule(
-		path,
+		pathToRegexp(path + '/:id?', undefined, { sensitive: true, strict: false }),
 		collection
 	));
+
 	return this;
+};
+
+Middleware.prototype.defaultMiddleware = function(req, res, next) {
+	res.writeHead(404);
+	res.end();
 };
 
 Middleware.prototype.getMiddleware = function() {
 	return this.rules.map(function(rule) {
 		return function(req, res, next) {
 			if (rule.path.test(req.url)) {
+				var params = rule.path.exec(req.url);
 				res.setHeader('Content-Type', 'application/json');
 				if (req.method === 'GET') {
-					getCollection.bind(rule, res)();
+					if (getId(params)) {
+						getItem.bind(rule, params, res)();
+					} else {
+						getCollection.bind(rule, params, res)();
+					}
 				}
 				res.writeHead(405);
 				res.end();
@@ -54,7 +82,7 @@ Middleware.prototype.getMiddleware = function() {
 			}
 			next();
 		};
-	});
+	}).concat(this.defaultMiddleware);
 };
 
 module.exports = function() {
