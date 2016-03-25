@@ -20,11 +20,14 @@
     "test": "JASMINE_CONFIG_PATH=test/jasmine.json jasmine"
   },
   "dependencies": {
+    "body": "^5.1.0",
     "path-to-regexp": "^1.2.1"
   },
   "devDependencies": {
+    "async": "^2.0.0-rc.2",
     "connect": "^3.4.1",
     "jasmine": "^2.4.1",
+    "supertest": "^1.2.0",
     "ux-lint": "github:banno/ux-lint"
   },
   "repository": {
