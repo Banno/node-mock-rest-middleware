@@ -49,6 +49,38 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('POST /path', function() {
+
+		var newItem = { id: 1, foo: 2, bar: 3 };
+		var post;
+
+		beforeEach(function() {
+			post = function() {
+				return app.tester.post(app.path).send(newItem);
+			};
+		});
+
+		it('should respond with the same item', function(done) {
+			post().expect(newItem, finishTest(done));
+		});
+
+		it('should add the item to the collection', function(done) {
+			async.series([
+				function(cb) { post().end(cb); },
+				function(cb) { app.tester.get(app.path + '/' + newItem.id).expect(newItem, cb); },
+			], finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			post().expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			post().expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+	});
+
 	describe('GET /path/:id', function() {
 
 		describe('when an item with that ID exists', function() {

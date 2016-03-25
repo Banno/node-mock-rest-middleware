@@ -1,5 +1,6 @@
 'use strict';
 
+var jsonBody = require('body/json');
 var pathToRegexp = require('path-to-regexp');
 
 function MiddlewareRule(path, collection) {
@@ -41,6 +42,13 @@ function getItem(params, res) {
 	}
 }
 
+function addItem(data, res) {
+	/* jshint validthis:true */
+	this.collection.push(data);
+	res.writeHead(200);
+	res.end(JSON.stringify(data));
+}
+
 Middleware.prototype.addResource = function(path, collection, opts) {
 	opts = opts || {};
 	if (typeof path === 'undefined') {
@@ -75,6 +83,17 @@ Middleware.prototype.getMiddleware = function() {
 					} else {
 						getCollection.bind(rule, params, res)();
 					}
+					return;
+				} else if (req.method === 'POST') {
+					jsonBody(req, res, function(err, body) {
+						if (err) {
+							res.writeHead(400);
+							res.end('Please send a JSON body for the request');
+							return;
+						}
+						addItem.bind(rule, body, res)();
+					});
+					return;
 				}
 				res.writeHead(405);
 				res.end();
