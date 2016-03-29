@@ -76,7 +76,7 @@ function replaceItem(params, data, res) {
 	var found = null;
 	this.collection.map(function(item, i) {
 		if (String(item.id) === id) {
-			found = extend(this.collection[i], data);
+			found = this.collection[i] = data;
 			return found;
 		}
 	}.bind(this));
