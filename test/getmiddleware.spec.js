@@ -160,6 +160,59 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('PATCH /path/:id', function() {
+
+		var newItem, expectedItem;
+
+		beforeEach(function() {
+			newItem = extend({}, app.collection[0]);
+			newItem.foo = 999;
+			delete newItem.bar;
+			expectedItem = extend({}, app.collection[0], newItem);
+		});
+
+		describe('when an item with that ID exists', function() {
+
+			var path, patch;
+
+			beforeEach(function() {
+				path = app.path + '/' + app.collection[0].id;
+				patch = function() {
+					return app.tester.patch(path).send(newItem);
+				};
+			});
+
+			it('should respond with the updated object', function(done) {
+				patch().expect(expectedItem, finishTest(done));
+			});
+
+			it('should replace the existing object', function(done) {
+				async.series([
+					function(cb) { patch().end(cb); },
+					function(cb) { app.tester.get(path).expect(expectedItem, cb); },
+				], finishTest(done));
+			});
+
+			it('should respond with a 200 code', function(done) {
+				patch().expect(200, finishTest(done));
+			});
+
+			it('should respond with an application/json type', function(done) {
+				patch().expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+		});
+
+		describe('when an item with that ID cannot be found', function() {
+
+			it('should respond with a 404 code', function(done) {
+				app.tester.put(app.path + '/nonexistent').send({}).expect(404, finishTest(done));
+			});
+
+		});
+
+	});
+
 	describe('DELETE /path/:id', function() {
 
 		describe('when an item with that ID exists', function() {
