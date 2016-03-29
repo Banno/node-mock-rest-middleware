@@ -3,6 +3,7 @@ describe('getMiddleware()', function() {
 
 	var app;
 	var async = require('async');
+	var extend = require('extend');
 	var finishTest = require('./test-helpers').finishTest;
 	var createApp = require('./test-helpers').createApp;
 
@@ -105,10 +106,53 @@ describe('getMiddleware()', function() {
 
 		});
 
+	});
+
+	describe('PUT /path/:id', function() {
+
+		var newItem;
+
+		beforeEach(function() {
+			newItem = extend({}, app.collection[0]);
+			newItem.foo = 999;
+		});
+
+		describe('when an item with that ID exists', function() {
+
+			var path, put;
+
+			beforeEach(function() {
+				path = app.path + '/' + app.collection[0].id;
+				put = function() {
+					return app.tester.put(path).send(newItem);
+				};
+			});
+
+			it('should respond with the new object', function(done) {
+				put().expect(newItem, finishTest(done));
+			});
+
+			it('should replace the existing object', function(done) {
+				async.series([
+					function(cb) { put().end(cb); },
+					function(cb) { app.tester.get(path).expect(newItem, cb); },
+				], finishTest(done));
+			});
+
+			it('should respond with a 200 code', function(done) {
+				put().expect(200, finishTest(done));
+			});
+
+			it('should respond with an application/json type', function(done) {
+				put().expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+		});
+
 		describe('when an item with that ID cannot be found', function() {
 
 			it('should respond with a 404 code', function(done) {
-				app.tester.get(app.path + '/nonexistent').expect(404, finishTest(done));
+				app.tester.put(app.path + '/nonexistent').send({}).expect(404, finishTest(done));
 			});
 
 		});

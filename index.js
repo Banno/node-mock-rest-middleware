@@ -1,5 +1,6 @@
 'use strict';
 
+var extend = require('extend');
 var jsonBody = require('body/json');
 var pathToRegexp = require('path-to-regexp');
 
@@ -49,6 +50,25 @@ function addItem(data, res) {
 	res.end(JSON.stringify(data));
 }
 
+function replaceItem(params, data, res) {
+	/* jshint validthis:true */
+	var id = getId(params);
+	var found = null;
+	this.collection.map(function(item, i) {
+		if (String(item.id) === id) {
+			found = extend(this.collection[i], data);
+			return found;
+		}
+	}.bind(this));
+	if (found) {
+		res.writeHead(200);
+		res.end(JSON.stringify(found));
+	} else {
+		res.writeHead(404);
+		res.end();
+	}
+}
+
 Middleware.prototype.addResource = function(path, collection, opts) {
 	opts = opts || {};
 	if (typeof path === 'undefined') {
@@ -92,6 +112,16 @@ Middleware.prototype.getMiddleware = function() {
 							return;
 						}
 						addItem.bind(rule, body, res)();
+					});
+					return;
+				} else if (req.method === 'PUT') {
+					jsonBody(req, res, function(err, body) {
+						if (err) {
+							res.writeHead(400);
+							res.end('Please send a JSON body for the request');
+							return;
+						}
+						replaceItem.bind(rule, params, body, res)();
 					});
 					return;
 				}
