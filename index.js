@@ -43,6 +43,26 @@ function getItem(params, res) {
 	}
 }
 
+function deleteItem(params, res) {
+	/* jshint validthis:true */
+	var id = getId(params);
+	var found = null;
+	this.collection = this.collection.filter(function(item, i) {
+		if (String(item.id) === id) {
+			found = item;
+			return false;
+		}
+		return true;
+	}.bind(this));
+	if (found) {
+		res.writeHead(200);
+		res.end(JSON.stringify(found));
+	} else {
+		res.writeHead(404);
+		res.end();
+	}
+}
+
 function addItem(data, res) {
 	/* jshint validthis:true */
 	this.collection.push(data);
@@ -123,6 +143,9 @@ Middleware.prototype.getMiddleware = function() {
 						}
 						replaceItem.bind(rule, params, body, res)();
 					});
+					return;
+				} else if (req.method === 'DELETE') {
+					deleteItem.bind(rule, params, res)();
 					return;
 				}
 				res.writeHead(405);

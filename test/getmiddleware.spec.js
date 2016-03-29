@@ -159,6 +159,51 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('DELETE /path/:id', function() {
+
+		describe('when an item with that ID exists', function() {
+
+			var path, del, oldItem;
+
+			beforeEach(function() {
+				path = app.path + '/' + app.collection[0].id;
+				oldItem = extend({}, app.collection[0]);
+				del = function() {
+					return app.tester.delete(path);
+				};
+			});
+
+			it('should respond with the deleted object', function(done) {
+				del().expect(oldItem, finishTest(done));
+			});
+
+			it('should remove the matching object', function(done) {
+				async.series([
+					function(cb) { del().end(cb); },
+					function(cb) { app.tester.get(path).expect(404, cb); },
+				], finishTest(done));
+			});
+
+			it('should respond with a 200 code', function(done) {
+				del().expect(200, finishTest(done));
+			});
+
+			it('should respond with an application/json type', function(done) {
+				del().expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+		});
+
+		describe('when an item with that ID cannot be found', function() {
+
+			it('should respond with a 404 code', function(done) {
+				app.tester.delete(app.path + '/nonexistent').expect(404, finishTest(done));
+			});
+
+		});
+
+	});
+
 	describe('unknown methods', function() {
 
 		it('should respond with a 405 code', function(done) {
