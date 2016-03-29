@@ -5,11 +5,12 @@ var connect = require('connect');
 var request = require('supertest');
 
 var path = '/foo';
-var collection = [{ id: 42, foo: 1, bar: 2 }, { id: 77, foo: 3, bar: 4 }];
+var collection;
 
 exports.createApp = function() {
 	var app = connect();
 	var mocks = middleware();
+	collection = [{ id: 42, foo: 1, bar: 2 }, { id: 77, foo: 3, bar: 4 }];
 	mocks.addResource(path, collection);
 	mocks.getMiddleware().map(app.use.bind(app));
 	var testApp = request(app);
