@@ -48,6 +48,10 @@ describe('getMiddleware()', function() {
 			app.tester.get(app.path).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.get(app.path + '/').expect(200, finishTest(done));
+		});
+
 		describe('when an "offset" parameter is specified', function() {
 
 			it('should respond with a slice of the data', function(done) {
@@ -78,15 +82,24 @@ describe('getMiddleware()', function() {
 
 		describe('when both "offset" and "limit" parameters are specified', function() {
 
-			it('should respond with a slice of the data', function(done) {
-				var offset = 1;
-				var limit = 1;
+			var offset, limit, expectedData;
+
+			beforeEach(function() {
+				offset = 1;
+				limit = 1;
 				var slicedData = app.collection.slice(offset, offset + limit);
-				var expectedData = {
+				expectedData = {
 					items: slicedData,
 					total: slicedData.length
 				};
+			});
+
+			it('should respond with a slice of the data', function(done) {
 				app.tester.get(app.path).query({ offset: offset, limit: limit }).expect(expectedData, finishTest(done));
+			});
+
+			it('should work with a trailing slash in the path', function(done) {
+				app.tester.get(app.path + '/').query({ offset: offset, limit: limit }).expect(expectedData, finishTest(done));
 			});
 
 		});
@@ -151,6 +164,10 @@ describe('getMiddleware()', function() {
 			app.tester.head(app.path).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.head(app.path + '/').expect('', finishTest(done));
+		});
+
 	});
 
 	describe('POST /path', function() {
@@ -183,6 +200,10 @@ describe('getMiddleware()', function() {
 			post().expect('Content-Type', 'application/json', finishTest(done));
 		});
 
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.post(app.path + '/').send(newItem).expect(newItem, finishTest(done));
+		});
+
 	});
 
 	describe('GET /path/:id', function() {
@@ -205,6 +226,10 @@ describe('getMiddleware()', function() {
 
 			it('should respond with an application/json type', function(done) {
 				app.tester.get(path).expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+			it('should work with a trailing slash in the path', function(done) {
+				app.tester.get(path + '/').expect(app.collection[0], finishTest(done));
 			});
 
 		});
@@ -239,6 +264,10 @@ describe('getMiddleware()', function() {
 
 			it('should respond with an application/json type', function(done) {
 				app.tester.head(path).expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+			it('should work with a trailing slash in the path', function(done) {
+				app.tester.head(app.path + '/').expect('', finishTest(done));
 			});
 
 		});
@@ -291,6 +320,10 @@ describe('getMiddleware()', function() {
 				put().expect('Content-Type', 'application/json', finishTest(done));
 			});
 
+			it('should work with a trailing slash in the path', function(done) {
+				app.tester.put(path + '/').send(newItem).expect(newItem, finishTest(done));
+			});
+
 		});
 
 		describe('when an item with that ID cannot be found', function() {
@@ -328,6 +361,10 @@ describe('getMiddleware()', function() {
 
 		it('should respond with an application/json type', function(done) {
 			app.tester.patch(app.path).send(newItems).expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.patch(app.path + '/').send(newItems).expect(expectedItems, finishTest(done));
 		});
 
 	});
@@ -373,6 +410,10 @@ describe('getMiddleware()', function() {
 				patch().expect('Content-Type', 'application/json', finishTest(done));
 			});
 
+			it('should work with a trailing slash in the path', function(done) {
+				app.tester.patch(path + '/').send(newItem).expect(expectedItem, finishTest(done));
+			});
+
 		});
 
 		describe('when an item with that ID cannot be found', function() {
@@ -416,6 +457,10 @@ describe('getMiddleware()', function() {
 
 			it('should respond with an application/json type', function(done) {
 				del().expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+			it('should work with a trailing slash in the path', function(done) {
+				app.tester.delete(path + '/').expect(oldItem, finishTest(done));
 			});
 
 		});

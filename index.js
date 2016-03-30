@@ -16,6 +16,12 @@ function Middleware() {
 }
 
 function getId(params) {
+	// Check if an ID was matched.
+	if (!params[1]) { return; }
+
+	// Check for case where there is no ID, but there are query params.
+	if (params[1][0] === '?') { return; }
+
 	return params[1];
 }
 
