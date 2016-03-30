@@ -50,6 +50,22 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('HEAD /path', function() {
+
+		it('should respond with no data', function(done) {
+			app.tester.head(app.path).expect('', finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			app.tester.head(app.path).expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			app.tester.head(app.path).expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+	});
+
 	describe('POST /path', function() {
 
 		var newItem = { id: 1, foo: 2, bar: 3 };
@@ -110,6 +126,40 @@ describe('getMiddleware()', function() {
 
 			it('should respond with a 404 code', function(done) {
 				app.tester.get(app.path + '/nonexistent').expect(404, finishTest(done));
+			});
+
+		});
+
+	});
+
+	describe('HEAD /path/:id', function() {
+
+		describe('when an item with that ID exists', function() {
+
+			var path;
+
+			beforeEach(function() {
+				path = app.path + '/' + app.collection[0].id;
+			});
+
+			it('should respond with no data', function(done) {
+				app.tester.head(path).expect('', finishTest(done));
+			});
+
+			it('should respond with a 200 code', function(done) {
+				app.tester.head(path).expect(200, finishTest(done));
+			});
+
+			it('should respond with an application/json type', function(done) {
+				app.tester.head(path).expect('Content-Type', 'application/json', finishTest(done));
+			});
+
+		});
+
+		describe('when an item with that ID cannot be found', function() {
+
+			it('should respond with a 404 code', function(done) {
+				app.tester.head(app.path + '/nonexistent').expect(404, finishTest(done));
 			});
 
 		});

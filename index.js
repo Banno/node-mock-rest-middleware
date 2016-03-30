@@ -136,7 +136,7 @@ Middleware.prototype.getMiddleware = function() {
 			if (rule.path.test(req.url)) {
 				var params = rule.path.exec(req.url);
 				res.setHeader('Content-Type', 'application/json');
-				if (req.method === 'GET') {
+				if (req.method === 'GET' || req.method === 'HEAD') {
 					if (getId(params)) {
 						getItem.bind(rule, params, res)();
 					} else {
