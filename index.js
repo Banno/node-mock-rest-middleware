@@ -26,9 +26,12 @@ function getQueryParams(params) {
 
 function getCollection(params, res) {
 	/* jshint validthis:true */
+	var specialParams = ['limit', 'offset', 'q', 'query'];
 	var urlParams = getQueryParams(params);
 	var filteredCollection = this.collection.filter(function(item) {
 		var matchesAll = true;
+
+		// Check against the "query" & "q" params.
 		var textSearch = urlParams.query || urlParams.q || null;
 		if (textSearch) {
 			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
@@ -38,6 +41,14 @@ function getCollection(params, res) {
 				return prevVal;
 			}, false);
 		}
+
+		// Check against any non-special query params.
+		Object.keys(urlParams).filter(function(key) {
+			return specialParams.indexOf(key) === -1;
+		}).map(function(key) {
+			matchesAll = matchesAll && String(item[key]) === urlParams[key];
+		});
+
 		return matchesAll;
 	});
 	var offset = urlParams.offset ? parseInt(urlParams.offset, 10) : 0;
