@@ -91,6 +91,30 @@ describe('getMiddleware()', function() {
 
 		});
 
+		describe('when a "query" parameter is specified', function() {
+
+			it('should respond with only the items that match', function(done) {
+				var expectedData = {
+					items: [app.collection[1]],
+					total: 1
+				};
+				app.tester.get(app.path).query({ query: 5 }).expect(expectedData, finishTest(done));
+			});
+
+		});
+
+		describe('when a "q" parameter is specified', function() {
+
+			it('should respond with only the items that match', function(done) {
+				var expectedData = {
+					items: [app.collection[1]],
+					total: 1
+				};
+				app.tester.get(app.path).query({ query: 5 }).expect(expectedData, finishTest(done));
+			});
+
+		});
+
 	});
 
 	describe('HEAD /path', function() {

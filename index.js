@@ -27,9 +27,22 @@ function getQueryParams(params) {
 function getCollection(params, res) {
 	/* jshint validthis:true */
 	var urlParams = getQueryParams(params);
+	var filteredCollection = this.collection.filter(function(item) {
+		var matchesAll = true;
+		var textSearch = urlParams.query || urlParams.q || null;
+		if (textSearch) {
+			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
+				if (item.hasOwnProperty(key)) {
+					return prevVal || String(item[key]).indexOf(textSearch) > -1;
+				}
+				return prevVal;
+			}, false);
+		}
+		return matchesAll;
+	});
 	var offset = urlParams.offset ? parseInt(urlParams.offset, 10) : 0;
 	var limit = urlParams.limit ? parseInt(urlParams.limit, 10) : this.collection.length;
-	var itemsSubset = this.collection.slice(offset, offset + limit);
+	var itemsSubset = filteredCollection.slice(offset, offset + limit);
 	var data = {
 		items: itemsSubset,
 		total: itemsSubset.length
