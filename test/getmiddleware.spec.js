@@ -258,9 +258,7 @@ describe('getMiddleware()', function() {
 		var newItem;
 
 		beforeEach(function() {
-			newItem = extend({}, app.collection[0]);
-			newItem.foo = 999;
-			delete newItem.bar;
+			newItem = extend({}, app.collection[0],	{ foo: 999, bar: undefined });
 		});
 
 		describe('when an item with that ID exists', function() {
