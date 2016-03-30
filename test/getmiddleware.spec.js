@@ -305,6 +305,35 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('PATCH /path', function() {
+
+		var newItems, expectedItems;
+
+		beforeEach(function() {
+			newItems = [
+				extend({}, app.collection[0], { foo: 7, bar: undefined }),
+				extend({}, app.collection[1], { baz: 'new prop' })
+			];
+			expectedItems = [
+				extend({}, app.collection[0], newItems[0]),
+				extend({}, app.collection[1], newItems[1])
+			];
+		});
+
+		it('should respond with the updated objects', function(done) {
+			app.tester.patch(app.path).send(newItems).expect(expectedItems, finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			app.tester.patch(app.path).send(newItems).expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			app.tester.patch(app.path).send(newItems).expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+	});
+
 	describe('PATCH /path/:id', function() {
 
 		var newItem, expectedItem;

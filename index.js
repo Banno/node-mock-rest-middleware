@@ -104,6 +104,26 @@ function addItem(data, res) {
 	res.end(JSON.stringify(data));
 }
 
+function extendCollection(params, data, res) {
+	/* jshint validthis:true */
+	var found = [];
+	data.forEach(function(newItem) {
+		this.collection.forEach(function(item, i) {
+			if (item.id === newItem.id) {
+				extend(this.collection[i], newItem);
+				found.push(this.collection[i]);
+			}
+		}.bind(this));
+	}.bind(this));
+	if (found) {
+		res.writeHead(200);
+		res.end(JSON.stringify(found));
+	} else {
+		res.writeHead(404);
+		res.end();
+	}
+}
+
 function extendItem(params, data, res) {
 	/* jshint validthis:true */
 	var id = getId(params);
@@ -204,7 +224,11 @@ Middleware.prototype.getMiddleware = function() {
 							res.end('Please send a JSON body for the request');
 							return;
 						}
-						extendItem.bind(rule, params, body, res)();
+						if (getId(params)) {
+							extendItem.bind(rule, params, body, res)();
+						} else {
+							extendCollection.bind(rule, params, body, res)();
+						}
 					});
 					return;
 				} else if (req.method === 'DELETE') {
