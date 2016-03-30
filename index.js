@@ -3,6 +3,7 @@
 var extend = require('extend');
 var jsonBody = require('body/json');
 var pathToRegexp = require('path-to-regexp');
+var url = require('url');
 
 function MiddlewareRule(path, collection) {
 	this.path = new RegExp(path);
@@ -18,11 +19,20 @@ function getId(params) {
 	return params[1];
 }
 
+function getQueryParams(params) {
+	var parsed = url.parse(params[0], true);
+	return parsed.query;
+}
+
 function getCollection(params, res) {
 	/* jshint validthis:true */
+	var urlParams = getQueryParams(params);
+	var offset = urlParams.offset ? parseInt(urlParams.offset, 10) : 0;
+	var limit = urlParams.limit ? parseInt(urlParams.limit, 10) : this.collection.length;
+	var itemsSubset = this.collection.slice(offset, offset + limit);
 	var data = {
-		items: this.collection,
-		total: this.collection.length
+		items: itemsSubset,
+		total: itemsSubset.length
 	};
 	res.writeHead(200);
 	res.end(JSON.stringify(data));
@@ -118,7 +128,7 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 	}
 
 	this.rules.push(new MiddlewareRule(
-		pathToRegexp(path + '/:id?', undefined, { sensitive: true, strict: false }),
+		pathToRegexp(path + '/:id?(\\?.*)?', undefined, { sensitive: true, strict: false }),
 		collection
 	));
 

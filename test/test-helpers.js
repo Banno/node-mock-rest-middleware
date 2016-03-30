@@ -10,7 +10,11 @@ var collection;
 exports.createApp = function() {
 	var app = connect();
 	var mocks = middleware();
-	collection = [{ id: 42, foo: 1, bar: 2 }, { id: 77, foo: 3, bar: 4 }];
+	collection = [
+		{ id: 42, foo: 1, bar: 2 },
+		{ id: 49, foo: 5, bar: 6 },
+		{ id: 77, foo: 3, bar: 4 }
+	];
 	mocks.addResource(path, collection);
 	mocks.getMiddleware().map(app.use.bind(app));
 	var testApp = request(app);

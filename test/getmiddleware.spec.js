@@ -48,6 +48,49 @@ describe('getMiddleware()', function() {
 			app.tester.get(app.path).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
+		describe('when an "offset" parameter is specified', function() {
+
+			it('should respond with a slice of the data', function(done) {
+				var offset = 1;
+				var slicedData = app.collection.slice(offset);
+				var expectedData = {
+					items: slicedData,
+					total: slicedData.length
+				};
+				app.tester.get(app.path).query({ offset: offset }).expect(expectedData, finishTest(done));
+			});
+
+		});
+
+		describe('when a "limit" parameter is specified', function() {
+
+			it('should respond with a slice of the data', function(done) {
+				var limit = 2;
+				var slicedData = app.collection.slice(0, limit);
+				var expectedData = {
+					items: slicedData,
+					total: slicedData.length
+				};
+				app.tester.get(app.path).query({ limit: limit }).expect(expectedData, finishTest(done));
+			});
+
+		});
+
+		describe('when both "offset" and "limit" parameters are specified', function() {
+
+			it('should respond with a slice of the data', function(done) {
+				var offset = 1;
+				var limit = 1;
+				var slicedData = app.collection.slice(offset, offset + limit);
+				var expectedData = {
+					items: slicedData,
+					total: slicedData.length
+				};
+				app.tester.get(app.path).query({ offset: offset, limit: limit }).expect(expectedData, finishTest(done));
+			});
+
+		});
+
 	});
 
 	describe('HEAD /path', function() {
