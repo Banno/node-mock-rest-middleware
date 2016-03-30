@@ -106,6 +106,14 @@ describe('getMiddleware()', function() {
 
 		});
 
+		describe('when an item with that ID cannot be found', function() {
+
+			it('should respond with a 404 code', function(done) {
+				app.tester.get(app.path + '/nonexistent').expect(404, finishTest(done));
+			});
+
+		});
+
 	});
 
 	describe('PUT /path/:id', function() {
