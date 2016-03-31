@@ -5,9 +5,27 @@ var jsonBody = require('body/json');
 var pathToRegexp = require('path-to-regexp');
 var url = require('url');
 
-function MiddlewareRule(path, collection) {
+function MiddlewareRule(path, collection, opts) {
 	this.path = new RegExp(path);
 	this.collection = collection;
+	this.opts = opts || {};
+
+	function guessIdProp(item) {
+		// First look for an "id" property.
+		if (typeof item.id !== 'undefined') { return 'id'; }
+
+		// Then look for a property that ends in "Id".
+		var idField = Object.keys(item).reduce(function(currentMatch, currentKey) {
+			if (currentMatch) { return currentMatch; }
+			if (currentKey.match(/Id$/)) { return currentKey; }
+			return currentMatch;
+		}, null);
+		if (idField) { return idField; }
+
+		// Otherwise use the first property.
+		return Object.keys(item)[0];
+	}
+	this.idKey = this.opts.idKey || guessIdProp(this.collection[0] || {});
 }
 
 function Middleware() {
@@ -72,8 +90,8 @@ function getItem(params, res) {
 	/* jshint validthis:true */
 	var id = getId(params);
 	var filtered = this.collection.filter(function(item) {
-		return String(item.id) === id;
-	});
+		return String(item[this.idKey]) === id;
+	}.bind(this));
 	if (filtered.length > 0) {
 		res.writeHead(200);
 		res.end(JSON.stringify(filtered[0]));
@@ -88,7 +106,7 @@ function deleteItem(params, res) {
 	var id = getId(params);
 	var found = null;
 	this.collection = this.collection.filter(function(item, i) {
-		if (String(item.id) === id) {
+		if (String(item[this.idKey]) === id) {
 			found = item;
 			return false;
 		}
@@ -115,7 +133,7 @@ function extendCollection(params, data, res) {
 	var found = [];
 	data.forEach(function(newItem) {
 		this.collection.forEach(function(item, i) {
-			if (item.id === newItem.id) {
+			if (item[this.idKey] === newItem[this.idKey]) {
 				extend(this.collection[i], newItem);
 				found.push(this.collection[i]);
 			}
@@ -135,7 +153,7 @@ function extendItem(params, data, res) {
 	var id = getId(params);
 	var found = null;
 	this.collection.map(function(item, i) {
-		if (String(item.id) === id) {
+		if (String(item[this.idKey]) === id) {
 			found = extend(this.collection[i], data);
 			return found;
 		}
@@ -154,7 +172,7 @@ function replaceItem(params, data, res) {
 	var id = getId(params);
 	var found = null;
 	this.collection.map(function(item, i) {
-		if (String(item.id) === id) {
+		if (String(item[this.idKey]) === id) {
 			found = this.collection[i] = data;
 			return found;
 		}
@@ -179,7 +197,8 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 
 	this.rules.push(new MiddlewareRule(
 		pathToRegexp(path + '/:id?(\\?.*)?', undefined, { sensitive: true, strict: false }),
-		collection
+		collection,
+		opts
 	));
 
 	return this;
