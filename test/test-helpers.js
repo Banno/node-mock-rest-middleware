@@ -16,7 +16,7 @@ exports.createApp = function() {
 		{ id: 77, foo: 3, bar: 4 }
 	];
 	mocks.addResource(path, collection);
-	mocks.getMiddleware().map(app.use.bind(app));
+	mocks.useWith(app);
 	var testApp = request(app);
 	return {
 		collection: collection,

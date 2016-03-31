@@ -250,6 +250,10 @@ Middleware.prototype.getMiddleware = function() {
 	}).concat(this.defaultMiddleware);
 };
 
+Middleware.prototype.useWith = function(app) {
+	this.getMiddleware().map(app.use.bind(app));
+};
+
 module.exports = function() {
 	return new Middleware();
 };
