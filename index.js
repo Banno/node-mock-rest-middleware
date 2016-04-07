@@ -48,8 +48,7 @@ function getQueryParams(params) {
 	return parsed.query;
 }
 
-function getCollection(params, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.getCollection = function(params, res) {
 	var specialParams = ['limit', 'offset', 'q', 'query'];
 	var urlParams = getQueryParams(params);
 	var filteredCollection = this.collection.filter(function(item) {
@@ -84,10 +83,9 @@ function getCollection(params, res) {
 	};
 	res.writeHead(200);
 	res.end(JSON.stringify(data));
-}
+};
 
-function getItem(params, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.getItem = function(params, res) {
 	var id = getId(params);
 	var filtered = this.collection.filter(function(item) {
 		return String(item[this.idKey]) === id;
@@ -99,10 +97,9 @@ function getItem(params, res) {
 		res.writeHead(404);
 		res.end();
 	}
-}
+};
 
-function deleteItem(params, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.deleteItem = function(params, res) {
 	var id = getId(params);
 	var found = null;
 	this.collection = this.collection.filter(function(item, i) {
@@ -119,17 +116,15 @@ function deleteItem(params, res) {
 		res.writeHead(404);
 		res.end();
 	}
-}
+};
 
-function addItem(data, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.addItem = function(data, res) {
 	this.collection.push(data);
 	res.writeHead(200);
 	res.end(JSON.stringify(data));
-}
+};
 
-function extendCollection(params, data, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.extendCollection = function(params, data, res) {
 	var found = [];
 	data.forEach(function(newItem) {
 		this.collection.forEach(function(item, i) {
@@ -146,10 +141,9 @@ function extendCollection(params, data, res) {
 		res.writeHead(404);
 		res.end();
 	}
-}
+};
 
-function extendItem(params, data, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.extendItem = function(params, data, res) {
 	var id = getId(params);
 	var found = null;
 	this.collection.map(function(item, i) {
@@ -165,10 +159,9 @@ function extendItem(params, data, res) {
 		res.writeHead(404);
 		res.end();
 	}
-}
+};
 
-function replaceItem(params, data, res) {
-	/* jshint validthis:true */
+MiddlewareRule.prototype.replaceItem = function(params, data, res) {
 	var id = getId(params);
 	var found = null;
 	this.collection.map(function(item, i) {
@@ -184,7 +177,7 @@ function replaceItem(params, data, res) {
 		res.writeHead(404);
 		res.end();
 	}
-}
+};
 
 Middleware.prototype.addResource = function(path, collection, opts) {
 	opts = opts || {};
@@ -217,9 +210,9 @@ Middleware.prototype.getMiddleware = function() {
 				res.setHeader('Content-Type', 'application/json');
 				if (req.method === 'GET' || req.method === 'HEAD') {
 					if (getId(params)) {
-						getItem.bind(rule, params, res)();
+						rule.getItem(params, res);
 					} else {
-						getCollection.bind(rule, params, res)();
+						rule.getCollection(params, res);
 					}
 					return;
 				} else if (req.method === 'POST') {
@@ -229,7 +222,7 @@ Middleware.prototype.getMiddleware = function() {
 							res.end('Please send a JSON body for the request');
 							return;
 						}
-						addItem.bind(rule, body, res)();
+						rule.addItem(body, res);
 					});
 					return;
 				} else if (req.method === 'PUT') {
@@ -239,7 +232,7 @@ Middleware.prototype.getMiddleware = function() {
 							res.end('Please send a JSON body for the request');
 							return;
 						}
-						replaceItem.bind(rule, params, body, res)();
+						rule.replaceItem(params, body, res);
 					});
 					return;
 				} else if (req.method === 'PATCH') {
@@ -250,14 +243,14 @@ Middleware.prototype.getMiddleware = function() {
 							return;
 						}
 						if (getId(params)) {
-							extendItem.bind(rule, params, body, res)();
+							rule.extendItem(params, body, res);
 						} else {
-							extendCollection.bind(rule, params, body, res)();
+							rule.extendCollection(params, body, res);
 						}
 					});
 					return;
 				} else if (req.method === 'DELETE') {
-					deleteItem.bind(rule, params, res)();
+					rule.deleteItem(params, res);
 					return;
 				}
 				res.writeHead(405);
