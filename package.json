@@ -25,7 +25,6 @@
     "path-to-regexp": "^1.2.1"
   },
   "devDependencies": {
-    "async": "^2.0.0-rc.2",
     "connect": "^3.4.1",
     "jasmine": "^2.4.1",
     "supertest": "^1.2.0",

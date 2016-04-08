@@ -1,22 +1,28 @@
 'use strict';
 
+var extend = require('extend');
 var jsonBody = require('body/json');
 var MiddlewareRule = require('./middlewarerule');
 var pathToRegexp = require('path-to-regexp');
+var parseUrl = require('url').parse;
 
 function Middleware() {
 	this.MiddlewareRule = MiddlewareRule; // mainly for testing
 	this.rules = [];
 }
 
-function getId(params) {
+function getId(parsed) {
 	// Check if an ID was matched.
-	if (!params[1]) { return; }
+	if (!parsed[1]) { return; }
 
 	// Check for case where there is no ID, but there are query params.
-	if (params[1][0] === '?') { return; }
+	if (parsed[1][0] === '?') { return; }
 
-	return params[1];
+	return parsed[1];
+}
+
+function getQueryParams(url) {
+	return parseUrl(url, true).query;
 }
 
 Middleware.prototype.addResource = function(path, collection, opts) {
@@ -45,52 +51,58 @@ Middleware.prototype.defaultMiddleware = function(req, res, next) {
 Middleware.prototype.getMiddleware = function() {
 	return this.rules.map(function(rule) {
 		return function(req, res, next) {
-			if (rule.path.test(req.url)) {
-				var params = rule.path.exec(req.url);
+			function parseParams(pathRegExp) {
+				var parsed = pathRegExp.exec(req.url);
+				return extend(
+					getId(parsed) ? { id: getId(parsed) } : {},
+					getQueryParams(parsed[0])
+				);
+			}
+			function handleResponse(response) {
+				response = response || {};
+				response.status = response.status || 200;
 				res.setHeader('Content-Type', 'application/json');
+				res.writeHead(response.status);
+				if (response.data) {
+					res.end(typeof response.data === 'object' ? JSON.stringify(response.data) : response.data);
+				} else {
+					res.end();
+				}
+			}
+			if (rule.path.test(req.url)) {
+				var params = parseParams(rule.path);
 				if (req.method === 'GET' || req.method === 'HEAD') {
-					if (getId(params)) {
-						rule.getItem(params, res);
-					} else {
-						rule.getCollection(params, res);
-					}
+					handleResponse(rule[params.id ? 'getItem' : 'getCollection'](params));
 					return;
 				} else if (req.method === 'POST') {
 					jsonBody(req, res, function(err, body) {
 						if (err) {
-							res.writeHead(400);
-							res.end('Please send a JSON body for the request');
+							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						rule.addItem(body, res);
+						handleResponse(rule.addItem(body));
 					});
 					return;
 				} else if (req.method === 'PUT') {
 					jsonBody(req, res, function(err, body) {
 						if (err) {
-							res.writeHead(400);
-							res.end('Please send a JSON body for the request');
+							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						rule.replaceItem(params, body, res);
+						handleResponse(rule.replaceItem(params, body));
 					});
 					return;
 				} else if (req.method === 'PATCH') {
 					jsonBody(req, res, function(err, body) {
 						if (err) {
-							res.writeHead(400);
-							res.end('Please send a JSON body for the request');
+							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						if (getId(params)) {
-							rule.extendItem(params, body, res);
-						} else {
-							rule.extendCollection(params, body, res);
-						}
+						handleResponse(rule[params.id ? 'extendItem' : 'extendCollection'](params, body));
 					});
 					return;
 				} else if (req.method === 'DELETE') {
-					rule.deleteItem(params, res);
+					handleResponse(rule.deleteItem(params));
 					return;
 				}
 				res.writeHead(405);

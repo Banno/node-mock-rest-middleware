@@ -1,25 +1,8 @@
 'use strict';
 
 var extend = require('extend');
-var url = require('url');
 
 module.exports = MiddlewareRule;
-
-// temporarily duplicated from index.js
-function getId(params) {
-	// Check if an ID was matched.
-	if (!params[1]) { return; }
-
-	// Check for case where there is no ID, but there are query params.
-	if (params[1][0] === '?') { return; }
-
-	return params[1];
-}
-
-function getQueryParams(params) {
-	var parsed = url.parse(params[0], true);
-	return parsed.query;
-}
 
 function MiddlewareRule(path, collection, opts) {
 	this.path = new RegExp(path);
@@ -38,82 +21,87 @@ function MiddlewareRule(path, collection, opts) {
 		}, null);
 		if (idField) { return idField; }
 
-		// Otherwise use the first property.
-		return Object.keys(item)[0];
+		// Otherwise use the first property, or simply "id".
+		return Object.keys(item)[0] || 'id';
 	}
 	this.idKey = this.opts.idKey || guessIdProp(this.collection[0] || {});
 }
 
-MiddlewareRule.prototype.addItem = function(data, res) {
+function areEqual(a, b) {
+	return String(a) === String(b);
+}
+
+//
+// MiddlewareRule methods can take 1 or 2 arguments:
+//   * path & query parameters, indexed by the key
+//   * body data, as JSON
+// They should return an object with any of the following keys:
+//   * status -- the HTTP response code
+//   * data -- the JSON body (null or undefined for no data)
+//   * headers -- HTTP headers, keyed by their name
+//
+
+MiddlewareRule.prototype.addItem = function(data) {
 	this.collection.push(data);
-	res.writeHead(200);
-	res.end(JSON.stringify(data));
+	return {
+		status: 200,
+		data: data
+	};
 };
 
-MiddlewareRule.prototype.deleteItem = function(params, res) {
-	var id = getId(params);
+MiddlewareRule.prototype.deleteItem = function(params) {
 	var found = null;
 	this.collection = this.collection.filter(function(item, i) {
-		if (String(item[this.idKey]) === id) {
+		if (areEqual(item[this.idKey], params.id)) {
 			found = item;
 			return false;
 		}
 		return true;
 	}.bind(this));
-	if (found) {
-		res.writeHead(200);
-		res.end(JSON.stringify(found));
-	} else {
-		res.writeHead(404);
-		res.end();
-	}
+	return {
+		status: found ? 200 : 404,
+		data: found
+	};
 };
 
-MiddlewareRule.prototype.extendCollection = function(params, data, res) {
+MiddlewareRule.prototype.extendCollection = function(params, data) {
 	var found = [];
 	data.forEach(function(newItem) {
 		this.collection.forEach(function(item, i) {
-			if (item[this.idKey] === newItem[this.idKey]) {
+			if (areEqual(item[this.idKey], newItem[this.idKey])) {
 				extend(this.collection[i], newItem);
 				found.push(this.collection[i]);
 			}
 		}.bind(this));
 	}.bind(this));
-	if (found) {
-		res.writeHead(200);
-		res.end(JSON.stringify(found));
-	} else {
-		res.writeHead(404);
-		res.end();
-	}
+	return {
+		status: 200,
+		data: found
+	};
 };
 
-MiddlewareRule.prototype.extendItem = function(params, data, res) {
-	var id = getId(params);
+MiddlewareRule.prototype.extendItem = function(params, data) {
 	var found = null;
 	this.collection.map(function(item, i) {
-		if (String(item[this.idKey]) === id) {
+		if (areEqual(item[this.idKey], params.id)) {
 			found = extend(this.collection[i], data);
 			return found;
 		}
 	}.bind(this));
-	if (found) {
-		res.writeHead(200);
-		res.end(JSON.stringify(found));
-	} else {
-		res.writeHead(404);
-		res.end();
-	}
+	return {
+		status: found ? 200 : 404,
+		data: found
+	};
 };
 
-MiddlewareRule.prototype.getCollection = function(params, res) {
+MiddlewareRule.prototype.getCollection = function(params) {
+	params = params || {};
 	var specialParams = ['limit', 'offset', 'q', 'query'];
-	var urlParams = getQueryParams(params);
 	var filteredCollection = this.collection.filter(function(item) {
 		var matchesAll = true;
 
 		// Check against the "query" & "q" params.
-		var textSearch = urlParams.query || urlParams.q || null;
+		var textSearch = params.query || params.q || null;
 		if (textSearch) {
 			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
 				if (item.hasOwnProperty(key)) {
@@ -124,53 +112,47 @@ MiddlewareRule.prototype.getCollection = function(params, res) {
 		}
 
 		// Check against any non-special query params.
-		Object.keys(urlParams).filter(function(key) {
+		Object.keys(params).filter(function(key) {
 			return specialParams.indexOf(key) === -1;
 		}).map(function(key) {
-			matchesAll = matchesAll && String(item[key]) === urlParams[key];
+			matchesAll = matchesAll && areEqual(item[key], params[key]);
 		});
 
 		return matchesAll;
 	});
-	var offset = urlParams.offset ? parseInt(urlParams.offset, 10) : 0;
-	var limit = urlParams.limit ? parseInt(urlParams.limit, 10) : this.collection.length;
+	var offset = params.offset ? parseInt(params.offset, 10) : 0;
+	var limit = params.limit ? parseInt(params.limit, 10) : this.collection.length;
 	var itemsSubset = filteredCollection.slice(offset, offset + limit);
 	var data = {
 		items: itemsSubset,
-		total: itemsSubset.length
+		total: filteredCollection.length
 	};
-	res.writeHead(200);
-	res.end(JSON.stringify(data));
+	return {
+		status: 200,
+		data: data
+	};
 };
 
-MiddlewareRule.prototype.getItem = function(params, res) {
-	var id = getId(params);
+MiddlewareRule.prototype.getItem = function(params) {
 	var filtered = this.collection.filter(function(item) {
-		return String(item[this.idKey]) === id;
+		return areEqual(item[this.idKey], params.id);
 	}.bind(this));
-	if (filtered.length > 0) {
-		res.writeHead(200);
-		res.end(JSON.stringify(filtered[0]));
-	} else {
-		res.writeHead(404);
-		res.end();
-	}
+	return {
+		status: filtered.length > 0 ? 200 : 404,
+		data: filtered[0]
+	};
 };
 
-MiddlewareRule.prototype.replaceItem = function(params, data, res) {
-	var id = getId(params);
+MiddlewareRule.prototype.replaceItem = function(params, data) {
 	var found = null;
 	this.collection.map(function(item, i) {
-		if (String(item[this.idKey]) === id) {
+		if (areEqual(item[this.idKey], params.id)) {
 			found = this.collection[i] = data;
 			return found;
 		}
 	}.bind(this));
-	if (found) {
-		res.writeHead(200);
-		res.end(JSON.stringify(found));
-	} else {
-		res.writeHead(404);
-		res.end();
-	}
+	return {
+		status: found ? 200 : 404,
+		data: found
+	};
 };

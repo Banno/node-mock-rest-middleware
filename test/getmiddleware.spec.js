@@ -2,7 +2,6 @@
 describe('getMiddleware()', function() {
 
 	var app;
-	var async = require('async');
 	var extend = require('extend');
 	var finishTest = require('./test-helpers').finishTest;
 	var createApp = require('./test-helpers').createApp;
@@ -25,17 +24,11 @@ describe('getMiddleware()', function() {
 
 	describe('GET /path', function() {
 
-		it('should respond with an object with "items" and "total" data', function(done) {
+		it('should respond with a JSON object', function(done) {
 			app.tester.get(app.path).end(function(err, res) {
 				// Supertest is pretty broken, so we have to do this in end().
 				// See https://github.com/visionmedia/supertest/issues/253
 				if (typeof res.body !== 'object') { finishTest(done)('body is not an object'); }
-				if (!jasmine.matchersUtil.equals(res.body.items, app.collection)) {
-					finishTest(done)('"items" is not the collection');
-				}
-				if (res.body.total !== app.collection.length) {
-					finishTest(done)('"total" is not the length of the collection');
-				}
 				finishTest(done)(err);
 			});
 		});
@@ -52,35 +45,7 @@ describe('getMiddleware()', function() {
 			app.tester.get(app.path + '/').expect(200, finishTest(done));
 		});
 
-		describe('when an "offset" parameter is specified', function() {
-
-			it('should respond with a slice of the data', function(done) {
-				var offset = 1;
-				var slicedData = app.collection.slice(offset);
-				var expectedData = {
-					items: slicedData,
-					total: slicedData.length
-				};
-				app.tester.get(app.path).query({ offset: offset }).expect(expectedData, finishTest(done));
-			});
-
-		});
-
-		describe('when a "limit" parameter is specified', function() {
-
-			it('should respond with a slice of the data', function(done) {
-				var limit = 2;
-				var slicedData = app.collection.slice(0, limit);
-				var expectedData = {
-					items: slicedData,
-					total: slicedData.length
-				};
-				app.tester.get(app.path).query({ limit: limit }).expect(expectedData, finishTest(done));
-			});
-
-		});
-
-		describe('when both "offset" and "limit" parameters are specified', function() {
+		describe('when parameters are specified', function() {
 
 			var offset, limit, expectedData;
 
@@ -90,7 +55,7 @@ describe('getMiddleware()', function() {
 				var slicedData = app.collection.slice(offset, offset + limit);
 				expectedData = {
 					items: slicedData,
-					total: slicedData.length
+					total: app.collection.length
 				};
 			});
 
@@ -100,50 +65,6 @@ describe('getMiddleware()', function() {
 
 			it('should work with a trailing slash in the path', function(done) {
 				app.tester.get(app.path + '/').query({ offset: offset, limit: limit }).expect(expectedData, finishTest(done));
-			});
-
-		});
-
-		describe('when a "query" parameter is specified', function() {
-
-			it('should respond with only the items that match', function(done) {
-				var expectedData = {
-					items: [app.collection[1]],
-					total: 1
-				};
-				app.tester.get(app.path).query({ query: 5 }).expect(expectedData, finishTest(done));
-			});
-
-		});
-
-		describe('when a "q" parameter is specified', function() {
-
-			it('should respond with only the items that match', function(done) {
-				var expectedData = {
-					items: [app.collection[1]],
-					total: 1
-				};
-				app.tester.get(app.path).query({ query: 5 }).expect(expectedData, finishTest(done));
-			});
-
-		});
-
-		describe('when a filtering parameter is specified', function() {
-
-			it('should respond with only the items that match that property', function(done) {
-				var expectedData = {
-					items: [app.collection[1]],
-					total: 1
-				};
-				app.tester.get(app.path).query({ foo: '5' }).expect(expectedData, finishTest(done));
-			});
-
-			it('should intersect with the "query" parameter', function(done) {
-				var expectedData = {
-					items: [],
-					total: 0
-				};
-				app.tester.get(app.path).query({ query: '1', foo: '5' }).expect(expectedData, finishTest(done));
 			});
 
 		});
@@ -183,13 +104,6 @@ describe('getMiddleware()', function() {
 
 		it('should respond with the same item', function(done) {
 			post().expect(newItem, finishTest(done));
-		});
-
-		it('should add the item to the collection', function(done) {
-			async.series([
-				function(cb) { post().end(cb); },
-				function(cb) { app.tester.get(app.path + '/' + newItem.id).expect(newItem, cb); },
-			], finishTest(done));
 		});
 
 		it('should respond with a 200 code', function(done) {
@@ -305,13 +219,6 @@ describe('getMiddleware()', function() {
 				put().expect(newItem, finishTest(done));
 			});
 
-			it('should replace the existing object', function(done) {
-				async.series([
-					function(cb) { put().end(cb); },
-					function(cb) { app.tester.get(path).expect(newItem, cb); },
-				], finishTest(done));
-			});
-
 			it('should respond with a 200 code', function(done) {
 				put().expect(200, finishTest(done));
 			});
@@ -395,13 +302,6 @@ describe('getMiddleware()', function() {
 				patch().expect(expectedItem, finishTest(done));
 			});
 
-			it('should replace the existing object', function(done) {
-				async.series([
-					function(cb) { patch().end(cb); },
-					function(cb) { app.tester.get(path).expect(expectedItem, cb); },
-				], finishTest(done));
-			});
-
 			it('should respond with a 200 code', function(done) {
 				patch().expect(200, finishTest(done));
 			});
@@ -442,13 +342,6 @@ describe('getMiddleware()', function() {
 
 			it('should respond with the deleted object', function(done) {
 				del().expect(oldItem, finishTest(done));
-			});
-
-			it('should remove the matching object', function(done) {
-				async.series([
-					function(cb) { del().end(cb); },
-					function(cb) { app.tester.get(path).expect(404, cb); },
-				], finishTest(done));
 			});
 
 			it('should respond with a 200 code', function(done) {
