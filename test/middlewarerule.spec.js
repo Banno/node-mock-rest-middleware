@@ -70,7 +70,7 @@ describe('MiddlewareRule', function() {
 		};
 
 		beforeEach(function() {
-			response = rule.addItem(data);
+			response = rule.addItem(null, data);
 		});
 
 		it('should add the body data to the collection', function() {
@@ -95,7 +95,7 @@ describe('MiddlewareRule', function() {
 		};
 
 		beforeEach(function() {
-			rule.addItem(data);
+			rule.addItem(null, data);
 		});
 
 		describe('when the item exists', function() {
@@ -166,9 +166,9 @@ describe('MiddlewareRule', function() {
 		describe('when at least one item is matched', function() {
 
 			beforeEach(function() {
-				rule.addItem(data[0]);
-				rule.addItem(data[1]);
-				rule.addItem(data[2]);
+				rule.addItem(null, data[0]);
+				rule.addItem(null, data[1]);
+				rule.addItem(null, data[2]);
 				response = rule.extendCollection({}, changes);
 			});
 
@@ -235,8 +235,8 @@ describe('MiddlewareRule', function() {
 		};
 
 		beforeEach(function() {
-			rule.addItem(data[0]);
-			rule.addItem(data[1]);
+			rule.addItem(null, data[0]);
+			rule.addItem(null, data[1]);
 		});
 
 		describe('when a matching item exists', function() {
@@ -296,9 +296,9 @@ describe('MiddlewareRule', function() {
 		}];
 
 		beforeEach(function() {
-			rule.addItem(data[0]);
-			rule.addItem(data[1]);
-			rule.addItem(data[2]);
+			rule.addItem(null, data[0]);
+			rule.addItem(null, data[1]);
+			rule.addItem(null, data[2]);
 			response = rule.getCollection();
 		});
 
@@ -423,7 +423,7 @@ describe('MiddlewareRule', function() {
 		};
 
 		beforeEach(function() {
-			rule.addItem(data);
+			rule.addItem(null, data);
 		});
 
 		describe('when the item exists', function() {
@@ -483,8 +483,8 @@ describe('MiddlewareRule', function() {
 		};
 
 		beforeEach(function() {
-			rule.addItem(data[0]);
-			rule.addItem(data[1]);
+			rule.addItem(null, data[0]);
+			rule.addItem(null, data[1]);
 		});
 
 		describe('when a matching item exists', function() {

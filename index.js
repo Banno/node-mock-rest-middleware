@@ -80,7 +80,7 @@ Middleware.prototype.getMiddleware = function() {
 							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						handleResponse(rule.addItem(body));
+						handleResponse(rule.addItem(params, body));
 					});
 					return;
 				} else if (req.method === 'PUT') {

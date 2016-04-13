@@ -32,16 +32,16 @@ function areEqual(a, b) {
 }
 
 //
-// MiddlewareRule methods can take 1 or 2 arguments:
+// MiddlewareRule methods have 2 arguments:
 //   * path & query parameters, indexed by the key
-//   * body data, as JSON
+//   * body data, as JSON (undefined if none)
 // They should return an object with any of the following keys:
 //   * status -- the HTTP response code
 //   * data -- the JSON body (null or undefined for no data)
 //   * headers -- HTTP headers, keyed by their name
 //
 
-MiddlewareRule.prototype.addItem = function(data) {
+MiddlewareRule.prototype.addItem = function(params, data) {
 	this.collection.push(data);
 	return {
 		status: 200,
@@ -49,7 +49,7 @@ MiddlewareRule.prototype.addItem = function(data) {
 	};
 };
 
-MiddlewareRule.prototype.deleteItem = function(params) {
+MiddlewareRule.prototype.deleteItem = function(params, data) {
 	var found = null;
 	this.collection = this.collection.filter(function(item, i) {
 		if (areEqual(item[this.idKey], params.id)) {
@@ -94,7 +94,7 @@ MiddlewareRule.prototype.extendItem = function(params, data) {
 	};
 };
 
-MiddlewareRule.prototype.getCollection = function(params) {
+MiddlewareRule.prototype.getCollection = function(params, data) {
 	params = params || {};
 	var specialParams = ['limit', 'offset', 'q', 'query'];
 	var filteredCollection = this.collection.filter(function(item) {
@@ -123,17 +123,17 @@ MiddlewareRule.prototype.getCollection = function(params) {
 	var offset = params.offset ? parseInt(params.offset, 10) : 0;
 	var limit = params.limit ? parseInt(params.limit, 10) : this.collection.length;
 	var itemsSubset = filteredCollection.slice(offset, offset + limit);
-	var data = {
+	var response = {
 		items: itemsSubset,
 		total: filteredCollection.length
 	};
 	return {
 		status: 200,
-		data: data
+		data: response
 	};
 };
 
-MiddlewareRule.prototype.getItem = function(params) {
+MiddlewareRule.prototype.getItem = function(params, data) {
 	var filtered = this.collection.filter(function(item) {
 		return areEqual(item[this.idKey], params.id);
 	}.bind(this));
