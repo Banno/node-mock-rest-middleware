@@ -2,10 +2,10 @@
 
 > Simple middleware for mocking REST services
 
-* *Simulates* a RESTful JSON API. Uses a transient data store that can be interacted with through a typical REST API.
-* *Simple and fast* to build the services.
-* *Middleware* that plugs into any [Connect](https://github.com/senchalabs/connect), [Express](http://expressjs.com/), or compatible server.
-* *Customizable* to change or extend how the API works.
+* **Simulates** a RESTful JSON API. Uses a transient data store that can be interacted with through a typical REST API.
+* **Simple and fast** to build the services.
+* **Middleware** that plugs into any [Connect](https://github.com/senchalabs/connect), [Express](http://expressjs.com/), or compatible server.
+* **Customizable** to change or extend how the API works.
 
 ## Usage
 
@@ -63,6 +63,7 @@ Injects the middleware into the given Connect-compatible app.
 Given a base path of `/example`, the middleware creates the mock endpoints:
 
 * `GET /example` -- Returns the full collection, in the format:
+
   ```javascript
   {
     items: [
@@ -71,6 +72,7 @@ Given a base path of `/example`, the middleware creates the mock endpoints:
     total: 20 // the number of items
   }
   ```
+
 * `GET /example?params` -- Returns a filtered collection. Same as above, but:
   * `offset` (zero-based) and `limit` parameters will return only a subset of the collection. Note: the returned `total` will remain the size of full collection.
   * `query` or `q` parameters will perform a partial text search. Note: All values are converted to strings for matching.
