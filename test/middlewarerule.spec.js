@@ -6,6 +6,19 @@ describe('MiddlewareRule', function() {
 	var path = '/foo';
 	var collection, rule, response;
 
+	var prefilterData = { filtered: 'prefilter' };
+	var prefilterFunc = function(params, data) {
+		return {
+			params: {},
+			data: prefilterData
+		};
+	};
+
+	var postfilterData = { filtered: 'postfilter' };
+	var postfilterFunc = function(params, data) {
+		return postfilterData;
+	};
+
 	beforeEach(function() {
 		collection = [];
 		rule = new MiddlewareRule(path, collection);
@@ -30,6 +43,37 @@ describe('MiddlewareRule', function() {
 			var opts = { foo: 1, bar: 2 };
 			rule = new MiddlewareRule(path, collection, opts);
 			expect(rule.opts).toEqual(opts);
+		});
+
+		describe('default prefilter', function() {
+
+			it('should exist if no prefilter is specified', function() {
+				expect(rule.prefilter).toEqual(jasmine.any(Function));
+			});
+
+			it('should return the params & data unchanged', function() {
+				var params = { id: 99 };
+				var data = { foo: 1, bar: 2 };
+				expect(rule.prefilter(params, data)).toEqual({
+					params: params,
+					data: data
+				});
+			});
+
+		});
+
+		describe('default postfilter', function() {
+
+			it('should exist if no postfilter is specified', function() {
+				expect(rule.postfilter).toEqual(jasmine.any(Function));
+			});
+
+			it('should return the data unchanged', function() {
+				var params = { id: 99 };
+				var data = { foo: 1, bar: 2 };
+				expect(rule.postfilter(params, data)).toEqual(data);
+			});
+
 		});
 
 		describe('"idKey" property', function() {
@@ -85,6 +129,18 @@ describe('MiddlewareRule', function() {
 			expect(response.status).toBe(200);
 		});
 
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			rule.addItem(null, data);
+			expect(rule.getCollection().data.items.pop()).toEqual(prefilterData);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.addItem(null, data);
+			expect(response).toEqual(postfilterData);
+		});
+
 	});
 
 	describe('deleteItem()', function() {
@@ -136,6 +192,18 @@ describe('MiddlewareRule', function() {
 				expect(response.status).toBe(404);
 			});
 
+		});
+
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			rule.deleteItem({ id: data.id });
+			expect(rule.getCollection().data.items).toEqual([data]);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.deleteItem({ id: data.id });
+			expect(response).toEqual(postfilterData);
 		});
 
 	});
@@ -217,6 +285,22 @@ describe('MiddlewareRule', function() {
 
 		});
 
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			rule.addItem(null, data[0]);
+			rule.extendCollection({}, changes);
+			expect(rule.getCollection().data.items).toEqual([prefilterData]);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			rule.addItem(null, data[0]);
+			rule.addItem(null, data[1]);
+			rule.addItem(null, data[2]);
+			response = rule.extendCollection({}, changes);
+			expect(response).toEqual(postfilterData);
+		});
+
 	});
 
 	describe('extendItem()', function() {
@@ -278,6 +362,18 @@ describe('MiddlewareRule', function() {
 				expect(response.status).toBe(404);
 			});
 
+		});
+
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			rule.extendItem({ id: change.id }, change);
+			expect(rule.getCollection().data.items).toEqual(data);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.extendItem({ id: change.id }, change);
+			expect(response).toEqual(postfilterData);
 		});
 
 	});
@@ -413,6 +509,17 @@ describe('MiddlewareRule', function() {
 
 		});
 
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			expect(rule.getCollection({ id: 999 }).data.items).toEqual(data);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.getCollection();
+			expect(response).toEqual(postfilterData);
+		});
+
 	});
 
 	describe('getItem()', function() {
@@ -464,6 +571,17 @@ describe('MiddlewareRule', function() {
 				expect(response.status).toBe(404);
 			});
 
+		});
+
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			expect(rule.getItem({ id: 999 }).data).toBeUndefined();
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.getItem({ id: data.id });
+			expect(response).toEqual(postfilterData);
 		});
 
 	});
@@ -526,6 +644,18 @@ describe('MiddlewareRule', function() {
 				expect(response.status).toBe(404);
 			});
 
+		});
+
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			rule.replaceItem({ id: change.id }, change);
+			expect(rule.getCollection().data.items).toEqual(data);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.replaceItem({ id: change.id }, change);
+			expect(response).toEqual(postfilterData);
 		});
 
 	});

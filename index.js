@@ -72,7 +72,7 @@ Middleware.prototype.getMiddleware = function() {
 			if (rule.path.test(req.url)) {
 				var params = parseParams(rule.path);
 				if (req.method === 'GET' || req.method === 'HEAD') {
-					handleResponse(rule[params.id ? 'getItem' : 'getCollection'](params));
+					handleResponse(rule[params.id ? 'getItem' : 'getCollection'](params, null, req));
 					return;
 				} else if (req.method === 'POST') {
 					jsonBody(req, res, function(err, body) {
@@ -80,7 +80,7 @@ Middleware.prototype.getMiddleware = function() {
 							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						handleResponse(rule.addItem(params, body));
+						handleResponse(rule.addItem(params, body, req));
 					});
 					return;
 				} else if (req.method === 'PUT') {
@@ -89,7 +89,7 @@ Middleware.prototype.getMiddleware = function() {
 							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						handleResponse(rule.replaceItem(params, body));
+						handleResponse(rule.replaceItem(params, body, req));
 					});
 					return;
 				} else if (req.method === 'PATCH') {
@@ -98,11 +98,11 @@ Middleware.prototype.getMiddleware = function() {
 							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
 							return;
 						}
-						handleResponse(rule[params.id ? 'extendItem' : 'extendCollection'](params, body));
+						handleResponse(rule[params.id ? 'extendItem' : 'extendCollection'](params, body, req));
 					});
 					return;
 				} else if (req.method === 'DELETE') {
-					handleResponse(rule.deleteItem(params));
+					handleResponse(rule.deleteItem(params, null, req));
 					return;
 				}
 				res.writeHead(405);
