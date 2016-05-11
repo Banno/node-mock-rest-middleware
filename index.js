@@ -34,13 +34,14 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 		throw new Error('A collection must be passed to addResource()');
 	}
 
-	this.rules.push(new MiddlewareRule(
+	var rule = new MiddlewareRule(
 		pathToRegexp(path + '/:id?(\\?.*)?', undefined, { sensitive: true, strict: false }),
 		collection,
 		opts
-	));
+	);
+	this.rules.push(rule);
 
-	return this;
+	return rule;
 };
 
 Middleware.prototype.defaultMiddleware = function(req, res, next) {

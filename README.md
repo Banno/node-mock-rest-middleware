@@ -48,7 +48,7 @@ The optional `options` object may contain:
 * `prefilter` -- A function that runs before every request. It receives the path+query parameters, the request body (parsed as JSON), and the raw http.ClientRequest. It should return the new input in the format `{ params: paramsObject, data: bodyDataObject }` for the normal routine to use.
 * `postfilter` -- A function that runs after every request. It receives the original path+query parameters (*unfiltered* from `prefilter`), the response (in `{ status: httpResponseCode, data: responseObject }`), and the raw http.ClientRequest. It should return the new response (in the same status+response format).
 
-Returns a chainable resource.
+Returns the new MiddlewareRule object. You can add new methods to it (or extend it) for extra/custom functionality.
 
 ### getMiddleware()
 
