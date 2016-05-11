@@ -15,7 +15,7 @@ exports.createApp = function() {
 		{ id: 49, foo: 5, bar: 6 },
 		{ id: 77, foo: 3, bar: 4 }
 	];
-	mocks.addResource(path, collection);
+	var newRule = mocks.addResource(path, collection);
 	mocks.useWith(app);
 	var testApp = request(app);
 	return {
@@ -23,6 +23,7 @@ exports.createApp = function() {
 		connectApp: app,
 		mocks: mocks,
 		path: path,
+		rule: newRule,
 		tester: testApp
 	};
 };

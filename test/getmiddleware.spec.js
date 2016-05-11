@@ -22,6 +22,15 @@ describe('getMiddleware()', function() {
 		}).not.toThrow();
 	});
 
+	it('should allow a Content-Type response header to be specified', function(done) {
+		var customContentType = 'text/plain';
+		app.rule.postfilter = function(params, response) {
+			response.contentType = customContentType;
+			return response;
+		};
+		app.tester.get(app.path).expect('Content-Type', customContentType, finishTest(done));
+	});
+
 	describe('GET /path', function() {
 
 		it('should respond with a JSON object', function(done) {

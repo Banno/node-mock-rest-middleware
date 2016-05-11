@@ -62,7 +62,8 @@ Middleware.prototype.getMiddleware = function() {
 			function handleResponse(response) {
 				response = response || {};
 				response.status = response.status || 200;
-				res.setHeader('Content-Type', 'application/json');
+				response.contentType = response.contentType || 'application/json';
+				res.setHeader('Content-Type', response.contentType);
 				res.writeHead(response.status);
 				if (response.data) {
 					res.end(typeof response.data === 'object' ? JSON.stringify(response.data) : response.data);
