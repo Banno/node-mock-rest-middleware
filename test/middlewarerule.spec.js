@@ -6,18 +6,17 @@ describe('MiddlewareRule', function() {
 	var path = '/foo';
 	var collection, rule, response;
 
+	var prefilterFunc, postfilterFunc;
 	var prefilterData = { filtered: 'prefilter' };
-	var prefilterFunc = function(params, data) {
-		return {
+	var postfilterData = { filtered: 'postfilter' };
+
+	beforeEach(function() {
+		prefilterFunc = jasmine.createSpy('prefilterFunc').and.returnValue({
 			params: {},
 			data: prefilterData
-		};
-	};
-
-	var postfilterData = { filtered: 'postfilter' };
-	var postfilterFunc = function(params, data) {
-		return postfilterData;
-	};
+		});
+		postfilterFunc = jasmine.createSpy('postfilterFunc').and.returnValue(postfilterData);
+	});
 
 	beforeEach(function() {
 		collection = [];
@@ -141,6 +140,14 @@ describe('MiddlewareRule', function() {
 			expect(response).toEqual(postfilterData);
 		});
 
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.addItem(originalParams, data, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
 	});
 
 	describe('deleteItem()', function() {
@@ -204,6 +211,14 @@ describe('MiddlewareRule', function() {
 			rule.postfilter = postfilterFunc;
 			response = rule.deleteItem({ id: data.id });
 			expect(response).toEqual(postfilterData);
+		});
+
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.deleteItem(originalParams, { id: data.id }, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
 		});
 
 	});
@@ -301,6 +316,14 @@ describe('MiddlewareRule', function() {
 			expect(response).toEqual(postfilterData);
 		});
 
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.extendCollection(originalParams, changes, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
 	});
 
 	describe('extendItem()', function() {
@@ -374,6 +397,14 @@ describe('MiddlewareRule', function() {
 			rule.postfilter = postfilterFunc;
 			response = rule.extendItem({ id: change.id }, change);
 			expect(response).toEqual(postfilterData);
+		});
+
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.extendItem(originalParams, change, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
 		});
 
 	});
@@ -520,6 +551,14 @@ describe('MiddlewareRule', function() {
 			expect(response).toEqual(postfilterData);
 		});
 
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.getCollection(originalParams, null, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
 	});
 
 	describe('getItem()', function() {
@@ -584,10 +623,19 @@ describe('MiddlewareRule', function() {
 			expect(response).toEqual(postfilterData);
 		});
 
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.getItem(originalParams, null, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
 	});
 
 	describe('replaceItem()', function() {
 
+		var change;
 		var data = [{
 			id: 1,
 			foo: 2
@@ -595,12 +643,12 @@ describe('MiddlewareRule', function() {
 			id: 2,
 			foo: 3
 		}];
-		var change = {
-			id: 1,
-			bar: 4
-		};
 
 		beforeEach(function() {
+			change = {
+				id: 1,
+				bar: 4
+			};
 			rule.addItem(null, data[0]);
 			rule.addItem(null, data[1]);
 		});
@@ -656,6 +704,14 @@ describe('MiddlewareRule', function() {
 			rule.postfilter = postfilterFunc;
 			response = rule.replaceItem({ id: change.id }, change);
 			expect(response).toEqual(postfilterData);
+		});
+
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.replaceItem(originalParams, change, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
 		});
 
 	});
