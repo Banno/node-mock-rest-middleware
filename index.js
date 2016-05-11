@@ -11,20 +11,29 @@ function Middleware() {
 	this.rules = [];
 }
 
-function getId(parsed) {
+function getId(parsed, pathKeys) {
+	// Find the index of the :id placeholder in the path.
+	var keys = Object.keys(pathKeys);
+	for (var idIndex = 0; idIndex < keys.length; idIndex++) {
+		if (pathKeys[keys[idIndex]].name === 'id') {
+			break;
+		}
+	}
+
 	// Check if an ID was matched.
-	if (!parsed[1]) { return; }
+	if (!parsed[idIndex + 1]) { return; }
 
 	// Check for case where there is no ID, but there are query params.
-	if (parsed[1][0] === '?') { return; }
+	if (parsed[idIndex + 1][0] === '?') { return; }
 
-	return parsed[1];
+	return parsed[idIndex + 1];
 }
 
 function getQueryParams(url) {
 	return parseUrl(url, true).query;
 }
 
+// Note: path cannot contain an ":id" placeholder. That is reserved.
 Middleware.prototype.addResource = function(path, collection, opts) {
 	opts = opts || {};
 	if (typeof path === 'undefined') {
@@ -55,7 +64,7 @@ Middleware.prototype.getMiddleware = function() {
 			function parseParams(pathRegExp) {
 				var parsed = pathRegExp.exec(req.url);
 				return extend(
-					getId(parsed) ? { id: getId(parsed) } : {},
+					getId(parsed, rule.path.keys) ? { id: getId(parsed, rule.path.keys) } : {},
 					getQueryParams(parsed[0])
 				);
 			}

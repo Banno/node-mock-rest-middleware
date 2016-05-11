@@ -38,7 +38,9 @@ http.createServer(app);
 
 ### addResource(path, collection, options)
 
-Adds a new resource at the given path. The path can include placeholders, e.g. `/foo/:id`.
+Adds a new resource at the given path. The path can include placeholders, e.g. `/foo/:someId`.
+
+**Note:** The path *cannot* contain an `:id` placeholder; that is reserved for use by the module.
 
 The collection argument should be the array of data that the endpoint begins with.
 

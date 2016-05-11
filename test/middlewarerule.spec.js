@@ -25,9 +25,8 @@ describe('MiddlewareRule', function() {
 
 	describe('constructor', function() {
 
-		it('should convert the path to RegExp', function() {
-			expect(rule.path instanceof RegExp).toBe(true);
-			expect(rule.path.source).toBe('\\/foo');
+		it('should save the path', function() {
+			expect(rule.path).toBe(path);
 		});
 
 		it('should save the collection', function() {

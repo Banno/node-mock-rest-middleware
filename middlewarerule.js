@@ -5,7 +5,7 @@ var extend = require('extend');
 module.exports = MiddlewareRule;
 
 function MiddlewareRule(path, collection, opts) {
-	this.path = new RegExp(path);
+	this.path = path;
 	this.collection = collection;
 	this.opts = opts || {};
 
