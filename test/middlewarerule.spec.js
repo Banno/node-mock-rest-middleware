@@ -43,6 +43,10 @@ describe('MiddlewareRule', function() {
 			expect(rule.opts).toEqual(opts);
 		});
 
+		it('should have a logger', function() {
+			expect(rule.logger).toBeDefined();
+		});
+
 		describe('default prefilter', function() {
 
 			it('should exist if no prefilter is specified', function() {

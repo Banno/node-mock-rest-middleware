@@ -5,10 +5,16 @@ var jsonBody = require('body/json');
 var MiddlewareRule = require('./middlewarerule');
 var pathToRegexp = require('path-to-regexp');
 var parseUrl = require('url').parse;
+var pkgName = require('./package.json').name;
 
 function Middleware() {
 	this.MiddlewareRule = MiddlewareRule; // mainly for testing
 	this.rules = [];
+
+	var minilog = require('minilog');
+	this.logger = minilog(pkgName);
+	this.logger.enable = minilog.enable;
+	this.logger.disable = minilog.disable;
 }
 
 function getId(parsed, pathKeys) {
@@ -50,6 +56,10 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 	);
 	this.rules.push(rule);
 
+	this.logger.info('Added rule', path);
+	this.logger.debug(rule);
+	rule.logger = this.logger; // put this after the logging for less output
+
 	return rule;
 };
 
@@ -59,6 +69,7 @@ Middleware.prototype.defaultMiddleware = function(req, res, next) {
 };
 
 Middleware.prototype.getMiddleware = function() {
+	var logger = this.logger;
 	return this.rules.map(function(rule) {
 		return function(req, res, next) {
 			function parseParams(pathRegExp) {
@@ -69,6 +80,7 @@ Middleware.prototype.getMiddleware = function() {
 				);
 			}
 			function handleResponse(response) {
+				logger.debug('...returning response:', response);
 				response = response || {};
 				response.status = response.status || 200;
 				response.contentType = response.contentType || 'application/json';
@@ -81,7 +93,10 @@ Middleware.prototype.getMiddleware = function() {
 				}
 			}
 			if (rule.path.test(req.url)) {
+				logger.info(req.method, req.url);
+				logger.debug('...matches pattern:', rule.path.source);
 				var params = parseParams(rule.path);
+				logger.debug('...parsed params:', params);
 				if (req.method === 'GET' || req.method === 'HEAD') {
 					handleResponse(rule[params.id ? 'getItem' : 'getCollection'](params, null, req));
 					return;

@@ -56,6 +56,11 @@ Returns the new MiddlewareRule object. You can add new methods to it (or extend 
 
 Returns an array of middleware that can be used in a Connect-compatible server.
 
+### logger.enable()
+### logger.disable()
+
+Turns logging on or off (begins disabled). Useful when debugging your rules.
+
 ### useWith(app)
 
 Injects the middleware into the given Connect-compatible app.

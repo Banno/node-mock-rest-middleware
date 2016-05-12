@@ -22,6 +22,7 @@
   "dependencies": {
     "body": "^5.1.0",
     "extend": "^3.0.0",
+    "minilog": "^3.0.0",
     "path-to-regexp": "^1.2.1"
   },
   "devDependencies": {

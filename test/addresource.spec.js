@@ -15,8 +15,8 @@ describe('addResource()', function() {
 	});
 
 	it('should return the newly created rule', function() {
-		var ret = mocks.addResource('foo', collection);
-		expect(ret instanceof MiddlewareRule).toBe(true);
+		var rule = mocks.addResource('foo', collection);
+		expect(rule instanceof MiddlewareRule).toBe(true);
 	});
 
 	it('should require a path argument', function() {
@@ -34,6 +34,11 @@ describe('addResource()', function() {
 	it('should add a new rule', function() {
 		mocks.addResource('foo', collection);
 		expect(mocks.rules.length).toBe(1);
+	});
+
+	it('should replace the default logger with the one from the middleware', function() {
+		var rule = mocks.addResource('foo', collection);
+		expect(rule.logger).toBe(mocks.logger);
 	});
 
 });

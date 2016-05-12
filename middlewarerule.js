@@ -1,6 +1,7 @@
 'use strict';
 
 var extend = require('extend');
+var pkgName = require('./package.json').name;
 
 module.exports = MiddlewareRule;
 
@@ -36,6 +37,8 @@ function MiddlewareRule(path, collection, opts) {
 	}
 	this.idKey = this.opts.idKey || guessIdProp(this.collection[0] || {});
 }
+
+MiddlewareRule.prototype.logger = require('minilog')(pkgName);
 
 function areEqual(a, b) {
 	return String(a) === String(b);
@@ -132,6 +135,7 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		// Check against the "query" & "q" params.
 		var textSearch = filteredParams.query || filteredParams.q || null;
 		if (textSearch) {
+			this.logger.debug('Searching for text', textSearch);
 			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
 				if (item.hasOwnProperty(key)) {
 					return prevVal || String(item[key]).indexOf(textSearch) > -1;
@@ -148,9 +152,10 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		});
 
 		return matchesAll;
-	});
+	}.bind(this));
 	var offset = filteredParams.offset ? parseInt(filteredParams.offset, 10) : 0;
 	var limit = filteredParams.limit ? parseInt(filteredParams.limit, 10) : this.collection.length;
+	this.logger.debug('Returning collection of', limit, 'items, starting at offset', offset);
 	var itemsSubset = filteredCollection.slice(offset, offset + limit);
 	var response = {
 		items: itemsSubset,
