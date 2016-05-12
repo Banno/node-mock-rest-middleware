@@ -10,16 +10,6 @@ function MiddlewareRule(path, collection, opts) {
 	this.collection = collection;
 	this.opts = opts || {};
 
-	this.prefilter  = this.opts.prefilter || function(params, data) {
-		return {
-			params: params,
-			data: data
-		};
-	};
-	this.postfilter = this.opts.postfilter || function(params, data) {
-		return data;
-	};
-
 	function guessIdProp(item) {
 		// First look for an "id" property.
 		if (typeof item.id !== 'undefined') { return 'id'; }
@@ -39,6 +29,17 @@ function MiddlewareRule(path, collection, opts) {
 }
 
 MiddlewareRule.prototype.logger = require('minilog')(pkgName);
+
+MiddlewareRule.prototype.prefilter = function(params, data) {
+	return {
+		params: params,
+		data: data
+	};
+};
+
+MiddlewareRule.prototype.postfilter = function(params, data) {
+	return data;
+};
 
 function areEqual(a, b) {
 	return String(a) === String(b);

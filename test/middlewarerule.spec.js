@@ -43,6 +43,18 @@ describe('MiddlewareRule', function() {
 			expect(rule.opts).toEqual(opts);
 		});
 
+		it('should ignore a prefilter passed in the options', function() {
+			var prefilter = { foo: 5 };
+			rule = new MiddlewareRule(path, collection, { prefilter: prefilter });
+			expect(rule.prefilter).not.toEqual(prefilter);
+		});
+
+		it('should ignore a postfilter passed in the options', function() {
+			var postfilter = { foo: 5 };
+			rule = new MiddlewareRule(path, collection, { postfilter: postfilter });
+			expect(rule.postfilter).not.toEqual(postfilter);
+		});
+
 		it('should have a logger', function() {
 			expect(rule.logger).toBeDefined();
 		});
