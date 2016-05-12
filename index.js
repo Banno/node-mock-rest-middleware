@@ -63,9 +63,9 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 	return rule;
 };
 
-Middleware.prototype.defaultMiddleware = function(req, res, next) {
-	res.writeHead(404);
-	res.end();
+Middleware.prototype.fallthroughMiddleware = function(req, res, next) {
+	this.logger.debug('No handler for', req.method, req.url, ', falling through to next middleware');
+	next();
 };
 
 Middleware.prototype.getMiddleware = function() {
@@ -137,7 +137,7 @@ Middleware.prototype.getMiddleware = function() {
 			}
 			next();
 		};
-	}).concat(this.defaultMiddleware);
+	}).concat(this.fallthroughMiddleware.bind(this));
 };
 
 Middleware.prototype.useWith = function(app) {
