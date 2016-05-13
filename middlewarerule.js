@@ -26,7 +26,14 @@ function MiddlewareRule(path, collection, opts) {
 		return Object.keys(item)[0] || 'id';
 	}
 	this.idKey = this.opts.idKey || guessIdProp(this.collection[0] || {});
+
+	// Set the collection keys, if specified.
+	if (this.opts.collectionKey) { this.collectionKey = this.opts.collectionKey; }
+	if (this.opts.countKey) { this.countKey = this.opts.countKey; }
 }
+
+MiddlewareRule.prototype.collectionKey = 'items';
+MiddlewareRule.prototype.countKey = 'total';
 
 MiddlewareRule.prototype.logger = require('minilog')(pkgName);
 
@@ -158,10 +165,9 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	var limit = filteredParams.limit ? parseInt(filteredParams.limit, 10) : this.collection.length;
 	this.logger.debug('Returning collection of', limit, 'items, starting at offset', offset);
 	var itemsSubset = filteredCollection.slice(offset, offset + limit);
-	var response = {
-		items: itemsSubset,
-		total: filteredCollection.length
-	};
+	var response = {};
+	response[this.collectionKey] = itemsSubset;
+	response[this.countKey] = filteredCollection.length;
 	return this.postfilter(params, {
 		status: 200,
 		data: response

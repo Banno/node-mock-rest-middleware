@@ -47,6 +47,8 @@ The collection argument should be the array of data that the endpoint begins wit
 The optional `options` object may contain:
 
 * `idKey` -- The name of the ID field. If not specified, the library will use the `id` field, or the first field that ends in `Id`, or the first field.
+* `collectionKey` -- The property name for the collection response (default `items`).
+* `countKey` -- The property name for the collection response (default `total`).
 
 These options can also be changed in the rule object after it is created.
 

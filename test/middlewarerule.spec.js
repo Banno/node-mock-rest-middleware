@@ -59,6 +59,26 @@ describe('MiddlewareRule', function() {
 			expect(rule.logger).toBeDefined();
 		});
 
+		it('should have a default "collectionKey" of "items"', function() {
+			expect(rule.collectionKey).toBe('items');
+		});
+
+		it('should change the "collectionKey" when passed as an option', function() {
+			var key = 'foobar';
+			rule = new MiddlewareRule(path, collection, { collectionKey: key });
+			expect(rule.collectionKey).toBe(key);
+		});
+
+		it('should have a default "countKey" of "total"', function() {
+			expect(rule.countKey).toBe('total');
+		});
+
+		it('should change the "countKey" when passed as an option', function() {
+			var key = 'foobar';
+			rule = new MiddlewareRule(path, collection, { countKey: key });
+			expect(rule.countKey).toBe(key);
+		});
+
 		describe('default prefilter', function() {
 
 			it('should exist if no prefilter is specified', function() {

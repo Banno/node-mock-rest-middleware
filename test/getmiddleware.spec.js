@@ -54,6 +54,24 @@ describe('getMiddleware()', function() {
 			app.tester.get(app.path + '/').expect(200, finishTest(done));
 		});
 
+		describe('when the collectionKey and countKey are changed', function() {
+
+			var collectionKey = 'foo';
+			var countKey = 'bar';
+
+			beforeEach(function() {
+				app = createApp({ collectionKey: collectionKey, countKey: countKey });
+			});
+
+			it('should use those keys in the response', function(done) {
+				var expectedData = {};
+				expectedData[collectionKey] = app.collection;
+				expectedData[countKey] = app.collection.length;
+				app.tester.get(app.path).expect(expectedData, finishTest(done));
+			});
+
+		});
+
 		describe('when parameters are specified', function() {
 
 			var offset, limit, expectedData;
