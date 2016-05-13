@@ -30,10 +30,31 @@ function MiddlewareRule(path, collection, opts) {
 	// Set the collection keys, if specified.
 	if (this.opts.collectionKey) { this.collectionKey = this.opts.collectionKey; }
 	if (this.opts.countKey) { this.countKey = this.opts.countKey; }
+
+	// Set the query parameters, if specified.
+	function getStringOrArray(val) {
+		if (Array.isArray(val)) {
+			return val;
+		} else if (typeof val === 'string') {
+			return [val];
+		}
+	}
+	if (this.opts.offsetParam) {
+		this.offsetParams = getStringOrArray(this.opts.offsetParam);
+	}
+	if (this.opts.limitParam) {
+		this.limitParams = getStringOrArray(this.opts.limitParam);
+	}
+	if (this.opts.queryParam) {
+		this.queryParams = getStringOrArray(this.opts.queryParam);
+	}
 }
 
 MiddlewareRule.prototype.collectionKey = 'items';
 MiddlewareRule.prototype.countKey = 'total';
+MiddlewareRule.prototype.offsetParams = ['offset'];
+MiddlewareRule.prototype.limitParams = ['limit'];
+MiddlewareRule.prototype.queryParams = ['q', 'query'];
 
 MiddlewareRule.prototype.logger = require('minilog')(pkgName);
 
@@ -136,12 +157,28 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	var filteredParams = filtered.params;
 	data = filtered.data;
 
-	var specialParams = ['limit', 'offset', 'q', 'query'];
+	// Helper function for the special parameters.
+	var getFirstParamValue = function(obj, searchKeys) {
+		// console.log('getFirstParamValue()', obj, searchKeys);
+		for (var key in obj) {
+			if (obj.hasOwnProperty(key) && searchKeys.indexOf(key) > -1) {
+				return obj[key];
+			}
+		}
+	};
+
+	var specialParams = [].concat(
+		this.offsetParams,
+		this.limitParams,
+		this.queryParams
+	);
+
+	var textSearch = getFirstParamValue(filteredParams, this.queryParams) || null;
+
 	var filteredCollection = this.collection.filter(function(item) {
 		var matchesAll = true;
 
-		// Check against the "query" & "q" params.
-		var textSearch = filteredParams.query || filteredParams.q || null;
+		// Check against the text query params.
 		if (textSearch) {
 			this.logger.debug('Searching for text', textSearch);
 			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
@@ -161,8 +198,10 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 
 		return matchesAll;
 	}.bind(this));
-	var offset = filteredParams.offset ? parseInt(filteredParams.offset, 10) : 0;
-	var limit = filteredParams.limit ? parseInt(filteredParams.limit, 10) : this.collection.length;
+	var offset = getFirstParamValue(filteredParams, this.offsetParams);
+	offset = offset ? parseInt(offset, 10) : 0;
+	var limit = getFirstParamValue(filteredParams, this.limitParams);
+	limit = limit ? parseInt(limit, 10) : this.collection.length;
 	this.logger.debug('Returning collection of', limit, 'items, starting at offset', offset);
 	var itemsSubset = filteredCollection.slice(offset, offset + limit);
 	var response = {};

@@ -49,6 +49,9 @@ The optional `options` object may contain:
 * `idKey` -- The name of the ID field. If not specified, the library will use the `id` field, or the first field that ends in `Id`, or the first field.
 * `collectionKey` -- The property name for the collection response (default `items`).
 * `countKey` -- The property name for the collection response (default `total`).
+* `offsetParam` -- The name(s) to use for the "offset" query parameter when retrieving a collection subset (string or array of strings, default `offset`).
+* `limitParam` -- The name(s) to use for the "limit" query parameter when retrieving a collection subset (string or array of strings, default `limit`).
+* `queryParam` -- The name(s) to use for the query parameter when performing a collection text search (string or array of strings, default `['q', 'query']`).
 
 These options can also be changed in the rule object after it is created.
 

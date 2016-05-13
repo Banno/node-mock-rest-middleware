@@ -72,6 +72,51 @@ describe('getMiddleware()', function() {
 
 		});
 
+		describe('when the special parameter names are changed', function() {
+
+			var offsetParam = 'alt_offset';
+			var limitParam = 'alt_limit';
+			var queryParam = 'alt_query';
+			var params;
+
+			beforeEach(function() {
+				app = createApp({
+					offsetParam: offsetParam,
+					limitParam: limitParam,
+					queryParam: queryParam
+				});
+				params = {};
+			});
+
+			it('should work with a changed "offsetParam"', function(done) {
+				params[offsetParam] = 1;
+				var expectedData = {
+					items: app.collection.slice(params[offsetParam]),
+					total: app.collection.length
+				};
+				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
+			});
+
+			it('should work with a changed "limitParam"', function(done) {
+				params[limitParam] = 1;
+				var expectedData = {
+					items: app.collection.slice(0, params[limitParam]),
+					total: app.collection.length
+				};
+				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
+			});
+
+			it('should work with a changed "queryParam"', function(done) {
+				params[queryParam] = '42';
+				var expectedData = {
+					items: app.collection.slice(0, 1),
+					total: 1
+				};
+				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
+			});
+
+		});
+
 		describe('when parameters are specified', function() {
 
 			var offset, limit, expectedData;

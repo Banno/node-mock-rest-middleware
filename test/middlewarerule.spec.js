@@ -79,6 +79,67 @@ describe('MiddlewareRule', function() {
 			expect(rule.countKey).toBe(key);
 		});
 
+		describe('offset params', function() {
+
+			it('should default to ["offset"]', function() {
+				expect(rule.offsetParams).toEqual(['offset']);
+			});
+
+			it('should change when passed as a string option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { offsetParam: key });
+				expect(rule.offsetParams).toEqual([key]);
+			});
+
+			it('should change when passed as an array option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { offsetParam: [key] });
+				expect(rule.offsetParams).toEqual([key]);
+			});
+
+		});
+
+		describe('limit params', function() {
+
+			it('should default to ["limit"]', function() {
+				expect(rule.limitParams).toEqual(['limit']);
+			});
+
+			it('should change when passed as a string option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { limitParam: key });
+				expect(rule.limitParams).toEqual([key]);
+			});
+
+			it('should change when passed as an array option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { limitParam: [key] });
+				expect(rule.limitParams).toEqual([key]);
+			});
+
+		});
+
+		describe('query params', function() {
+
+			it('should default to ["query", "q"]', function() {
+				expect(rule.queryParams).toContain('q');
+				expect(rule.queryParams).toContain('query');
+			});
+
+			it('should change when passed as a string option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { queryParam: key });
+				expect(rule.queryParams).toEqual([key]);
+			});
+
+			it('should change when passed as an array option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { queryParam: [key] });
+				expect(rule.queryParams).toEqual([key]);
+			});
+
+		});
+
 		describe('default prefilter', function() {
 
 			it('should exist if no prefilter is specified', function() {
