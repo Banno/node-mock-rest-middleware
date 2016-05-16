@@ -84,7 +84,12 @@ function areEqual(a, b) {
 //   * headers -- HTTP headers, keyed by their name
 //
 
+// The generic handler is not used by default.
+MiddlewareRule.prototype.handler = null;
+
 MiddlewareRule.prototype.addItem = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	var filtered = this.prefilter(params, data, req);
 	data = filtered.data;
 
@@ -96,6 +101,8 @@ MiddlewareRule.prototype.addItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.deleteItem = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	var filtered = this.prefilter(params, data, req);
 	var filteredParams = filtered.params;
 	data = filtered.data;
@@ -115,6 +122,8 @@ MiddlewareRule.prototype.deleteItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.extendCollection = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	var filtered = this.prefilter(params, data, req);
 	data = filtered.data instanceof Array ? filtered.data : [filtered.data];
 
@@ -134,6 +143,8 @@ MiddlewareRule.prototype.extendCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.extendItem = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	var filtered = this.prefilter(params, data, req);
 	var filteredParams = filtered.params;
 	data = filtered.data;
@@ -152,6 +163,8 @@ MiddlewareRule.prototype.extendItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.getCollection = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	params = params || {}; // mainly for testing; this should always be an object when used with the middleware
 	var filtered = this.prefilter(params, data, req);
 	var filteredParams = filtered.params;
@@ -214,6 +227,8 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.getItem = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	var filteredInput = this.prefilter(params, data, req);
 	var filteredParams = filteredInput.params;
 	data = filteredInput.data;
@@ -228,6 +243,8 @@ MiddlewareRule.prototype.getItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.replaceItem = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
 	var filtered = this.prefilter(params, data, req);
 	var filteredParams = filtered.params;
 	var found = null;

@@ -59,6 +59,7 @@ The following properties can only be changed on the rule object *after* it is cr
 
 * `prefilter` -- A function that runs before every request. It receives the path+query parameters, the request body (parsed as JSON), and the raw http.ClientRequest. It should return the new input in the format `{ params: paramsObject, data: bodyDataObject }` for the normal routine to use. Note you should clone any objects you change, rather than modifying them.
 * `postfilter` -- A function that runs after every request. It receives the original path+query parameters (*unfiltered* from `prefilter`), the response (in `{ status: httpResponseCode, data: responseObject, contentType: contentTypeHeader }`), and the raw http.ClientRequest. It should return the new response (in the same status+response format). If excluded, `status` defaults to `200` and `contentType` defaults to `application/json`.
+* `handler` -- A function to use for all requests. *Overrides all of the default handling! You'll need to check the request method and run the prefilter/postfilter functions yourself.*  Receives the same arguments as `prefilter`. It should return a response in the same format as `postfilter`.
 
 Returns the new MiddlewareRule object. You can add new methods to it (or extend it) for extra/custom functionality.
 

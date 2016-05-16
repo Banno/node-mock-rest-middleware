@@ -37,6 +37,10 @@ describe('MiddlewareRule', function() {
 			expect(rule.opts).toEqual({});
 		});
 
+		it('should default to a null handler', function() {
+			expect(rule.handler).toBe(null);
+		});
+
 		it('should save the options', function() {
 			var opts = { foo: 1, bar: 2 };
 			rule = new MiddlewareRule(path, collection, opts);
@@ -808,6 +812,61 @@ describe('MiddlewareRule', function() {
 			rule.postfilter = postfilterFunc;
 			response = rule.replaceItem(originalParams, change, null);
 			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
+	});
+
+	describe('custom handler', function() {
+
+		var handler, expectedReturn;
+
+		beforeEach(function() {
+			expectedReturn = 'expected return value';
+			handler = jasmine.createSpy('handler');
+			handler.and.returnValue(expectedReturn);
+			rule.handler = handler;
+		});
+
+		it('should override addItem()', function() {
+			response = rule.addItem();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
+		});
+
+		it('should override deleteItem()', function() {
+			response = rule.deleteItem();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
+		});
+
+		it('should override extendCollection()', function() {
+			response = rule.extendCollection();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
+		});
+
+		it('should override extendItem()', function() {
+			response = rule.extendItem();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
+		});
+
+		it('should override getCollection()', function() {
+			response = rule.getCollection();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
+		});
+
+		it('should override getItem()', function() {
+			response = rule.getItem();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
+		});
+
+		it('should override replaceItem()', function() {
+			response = rule.replaceItem();
+			expect(handler).toHaveBeenCalled();
+			expect(response).toBe(expectedReturn);
 		});
 
 	});
