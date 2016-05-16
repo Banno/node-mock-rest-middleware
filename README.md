@@ -52,6 +52,8 @@ The optional `options` object may contain:
 * `offsetParam` -- The name(s) to use for the "offset" query parameter when retrieving a collection subset (string or array of strings, default `offset`).
 * `limitParam` -- The name(s) to use for the "limit" query parameter when retrieving a collection subset (string or array of strings, default `limit`).
 * `queryParam` -- The name(s) to use for the query parameter when performing a collection text search (string or array of strings, default `['q', 'query']`).
+* `sortByParam` -- The name(s) to use for the field parameter when sorting collection results (string or array of strings, default `['sortBy']`).
+* `sortDirParam` -- The name(s) to use for the direction parameter when sorting collection results (string or array of strings, default `['sortDir']`).
 
 These options can also be changed in the rule object after it is created.
 
@@ -94,6 +96,7 @@ Given a base path of `/example`, the middleware creates the mock endpoints:
 * `GET /example?params` -- Returns a filtered collection. Same as above, but:
   * `offset` (zero-based) and `limit` parameters will return only a subset of the collection. Note: the returned `total` will remain the size of full collection.
   * `query` or `q` parameters will perform a partial text search. Note: All values are converted to strings for matching.
+  * `sortBy` and `sortDir` will sort the results by the top-level property specified in `sortBy`, in the direction specified by `sortDir` -- either case-insensitive `asc` (the default), or `desc` for reversed sorting.
   * Any other parameter will filter the collection using that parameter as the field name, and performing an exact string match against the value.
 * `GET /example/:id` -- Returns a single item from the collection. Returns a 404 if no match.
 * `HEAD (anything)` -- Same as `GET`, but doesn't return the body.

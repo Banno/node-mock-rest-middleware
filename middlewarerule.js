@@ -48,6 +48,12 @@ function MiddlewareRule(path, collection, opts) {
 	if (this.opts.queryParam) {
 		this.queryParams = getStringOrArray(this.opts.queryParam);
 	}
+	if (this.opts.sortByParam) {
+		this.sortByParams = getStringOrArray(this.opts.sortByParam);
+	}
+	if (this.opts.sortDirParam) {
+		this.sortDirParams = getStringOrArray(this.opts.sortDirParam);
+	}
 }
 
 MiddlewareRule.prototype.collectionKey = 'items';
@@ -55,6 +61,8 @@ MiddlewareRule.prototype.countKey = 'total';
 MiddlewareRule.prototype.offsetParams = ['offset'];
 MiddlewareRule.prototype.limitParams = ['limit'];
 MiddlewareRule.prototype.queryParams = ['q', 'query'];
+MiddlewareRule.prototype.sortByParams = ['sortBy'];
+MiddlewareRule.prototype.sortDirParams = ['sortDir'];
 
 MiddlewareRule.prototype.logger = require('minilog')(pkgName);
 
@@ -183,7 +191,9 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	var specialParams = [].concat(
 		this.offsetParams,
 		this.limitParams,
-		this.queryParams
+		this.queryParams,
+		this.sortByParams,
+		this.sortDirParams
 	);
 
 	var textSearch = getFirstParamValue(filteredParams, this.queryParams) || null;
@@ -211,6 +221,24 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 
 		return matchesAll;
 	}.bind(this));
+
+	var sortBy = getFirstParamValue(filteredParams, this.sortByParams);
+	if (sortBy) {
+		this.logger.debug('Sorting by', sortBy);
+		var sortDir = (getFirstParamValue(filteredParams, this.sortDirParams) || 'asc').toLowerCase();
+		this.logger.debug('Sorting in direction', sortDir);
+		filteredCollection.sort(function(a, b) {
+			if (sortDir === 'desc') {
+				if (a[sortBy] > b[sortBy]) { return -1; }
+				if (a[sortBy] < b[sortBy]) { return 1; }
+			} else {
+				if (a[sortBy] < b[sortBy]) { return -1; }
+				if (a[sortBy] > b[sortBy]) { return 1; }
+			}
+			return 0;
+		});
+	}
+
 	var offset = getFirstParamValue(filteredParams, this.offsetParams);
 	offset = offset ? parseInt(offset, 10) : 0;
 	var limit = getFirstParamValue(filteredParams, this.limitParams);

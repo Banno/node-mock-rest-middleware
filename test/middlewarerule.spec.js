@@ -144,6 +144,46 @@ describe('MiddlewareRule', function() {
 
 		});
 
+		describe('sortBy params', function() {
+
+			it('should default to ["sortBy"]', function() {
+				expect(rule.sortByParams).toEqual(['sortBy']);
+			});
+
+			it('should change when passed as a string option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { sortByParam: key });
+				expect(rule.sortByParams).toEqual([key]);
+			});
+
+			it('should change when passed as an array option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { sortByParam: [key] });
+				expect(rule.sortByParams).toEqual([key]);
+			});
+
+		});
+
+		describe('sortDir params', function() {
+
+			it('should default to ["sortDir"]', function() {
+				expect(rule.sortDirParams).toEqual(['sortDir']);
+			});
+
+			it('should change when passed as a string option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { sortDirParam: key });
+				expect(rule.sortDirParams).toEqual([key]);
+			});
+
+			it('should change when passed as an array option', function() {
+				var key = 'foobar';
+				rule = new MiddlewareRule(path, collection, { sortDirParam: [key] });
+				expect(rule.sortDirParams).toEqual([key]);
+			});
+
+		});
+
 		describe('default prefilter', function() {
 
 			it('should exist if no prefilter is specified', function() {
@@ -513,10 +553,10 @@ describe('MiddlewareRule', function() {
 
 		var data = [{
 			id: 1,
-			foo: 'bar'
+			foo: 'baz'
 		}, {
 			id: 2,
-			foo: 'baz'
+			foo: 'bar'
 		}, {
 			id: 3,
 			foo: 'pax'
@@ -618,11 +658,38 @@ describe('MiddlewareRule', function() {
 
 		});
 
+		describe('when a "sortBy" parameter is specified', function() {
+
+			it('should sort by that field in ascending order', function() {
+				response = rule.getCollection({ sortBy: 'foo' });
+				expect(response.data.items).toEqual([data[1], data[0], data[2]]);
+			});
+
+			describe('when a "sortDir" parameter is set to "asc"', function() {
+
+				it('should sort by that field in ascending order', function() {
+					response = rule.getCollection({ sortBy: 'foo', sortDir: 'asc' });
+					expect(response.data.items).toEqual([data[1], data[0], data[2]]);
+				});
+
+			});
+
+			describe('when a "sortDir" parameter is set to "desc"', function() {
+
+				it('should sort by that field in descending order', function() {
+					response = rule.getCollection({ sortBy: 'foo', sortDir: 'desc' });
+					expect(response.data.items).toEqual([data[2], data[0], data[1]]);
+				});
+
+			});
+
+		});
+
 		describe('when a filtering parameter is specified', function() {
 
 			it('should respond with only the items that match that property', function() {
 				response = rule.getCollection({ foo: 'bar' });
-				expect(response.data.items).toEqual(data.slice(0, 1));
+				expect(response.data.items).toEqual(data.slice(1, 2));
 				expect(response.data.total).toBe(1);
 			});
 
