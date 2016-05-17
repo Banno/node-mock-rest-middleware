@@ -1,7 +1,7 @@
 'use strict';
 
 var extend = require('extend');
-var jsonBody = require('body/json');
+var anyBody = require('body/any');
 var MiddlewareRule = require('./middlewarerule');
 var pathToRegexp = require('path-to-regexp');
 var parseUrl = require('url').parse;
@@ -101,27 +101,27 @@ Middleware.prototype.getMiddleware = function() {
 					handleResponse(rule[params.id ? 'getItem' : 'getCollection'](params, null, req));
 					return;
 				} else if (req.method === 'POST') {
-					jsonBody(req, res, function(err, body) {
+					anyBody(req, res, function(err, body) {
 						if (err) {
-							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
+							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
 							return;
 						}
 						handleResponse(rule.addItem(params, body, req));
 					});
 					return;
 				} else if (req.method === 'PUT') {
-					jsonBody(req, res, function(err, body) {
+					anyBody(req, res, function(err, body) {
 						if (err) {
-							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
+							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
 							return;
 						}
 						handleResponse(rule.replaceItem(params, body, req));
 					});
 					return;
 				} else if (req.method === 'PATCH') {
-					jsonBody(req, res, function(err, body) {
+					anyBody(req, res, function(err, body) {
 						if (err) {
-							handleResponse({ status: 400, data: 'Please send a JSON body for the request' });
+							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
 							return;
 						}
 						handleResponse(rule[params.id ? 'extendItem' : 'extendCollection'](params, body, req));

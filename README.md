@@ -106,6 +106,8 @@ Given a base path of `/example`, the middleware creates the mock endpoints:
 * `PATCH /example` -- Extends the matching resources using the given array of objects. It looks for an ID in each element of the array to lookup the existing items in the collection.
 * `PATCH /example/:id` -- Extends the matching resource with the given object.
 
+Don't forget to set `Content-Type: application/json` in your requests. Form data (`Content-Type: application/x-www-form-urlencoded`) are also supported.
+
 ## Contributing
 
 Please add tests and maintain the existing styling when adding and updating the code.

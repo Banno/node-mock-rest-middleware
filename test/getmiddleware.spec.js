@@ -448,4 +448,29 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('when a Content-Type header is set on the request', function() {
+
+		it('should allow application/json', function(done) {
+			app.tester.post(app.path)
+				.type('application/json')
+				.send({ foobar: '42' })
+				.expect(200, finishTest(done));
+		});
+
+		it('should allow application/x-www-form-urlencoded', function(done) {
+			app.tester.post(app.path)
+				.type('application/x-www-form-urlencoded')
+				.send({ foobar: '42' })
+				.expect(200, finishTest(done));
+		});
+
+		it('should not allow other types', function(done) {
+			app.tester.post(app.path)
+				.type('application/x-foobar')
+				.send('foobar')
+				.expect(400, finishTest(done));
+		});
+
+	});
+
 });
