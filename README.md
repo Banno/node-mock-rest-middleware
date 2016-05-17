@@ -101,6 +101,7 @@ Given a base path of `/example`, the middleware creates the mock endpoints:
 * `GET /example/:id` -- Returns a single item from the collection. Returns a 404 if no match.
 * `HEAD (anything)` -- Same as `GET`, but doesn't return the body.
 * `POST /example` -- Adds a new item with the passed JSON body. Returns the new item.
+* `PUT /example` -- Replaces the entire collection with the passed JSON body. Returns the new collection.
 * `PUT /example/:id` -- Replaces the matching resource with the passed JSON body. Returns the new item. Returns a 404 if no item with that ID exists.
 * `DELETE /example/:id` -- Removes the matching resource from the collection. Returns the deleted resource. Returns a 404 if no item with that ID exists.
 * `PATCH /example` -- Extends the matching resources using the given array of objects. It looks for an ID in each element of the array to lookup the existing items in the collection.

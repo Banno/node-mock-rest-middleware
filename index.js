@@ -115,7 +115,7 @@ Middleware.prototype.getMiddleware = function() {
 							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
 							return;
 						}
-						handleResponse(rule.replaceItem(params, body, req));
+						handleResponse(rule[params.id ? 'replaceItem' : 'replaceCollection'](params, body, req));
 					});
 					return;
 				} else if (req.method === 'PATCH') {

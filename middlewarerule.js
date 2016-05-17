@@ -270,6 +270,20 @@ MiddlewareRule.prototype.getItem = function(params, data, req) {
 	}, req);
 };
 
+MiddlewareRule.prototype.replaceCollection = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
+	var filtered = this.prefilter(params, data, req);
+	this.collection = filtered.data instanceof Array ? filtered.data : [filtered.data];
+	var response = {};
+	response[this.collectionKey] = this.collection;
+	response[this.countKey] = this.collection.length;
+	return this.postfilter(params, {
+		status: 200,
+		data: response
+	}, req);
+};
+
 MiddlewareRule.prototype.replaceItem = function(params, data, req) {
 	if (this.handler) { return this.handler.apply(this, arguments); }
 

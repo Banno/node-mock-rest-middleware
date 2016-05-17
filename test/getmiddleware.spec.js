@@ -268,12 +268,48 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('PUT /path', function() {
+
+		var newCollection, expectedData, put;
+
+		beforeEach(function() {
+			newCollection = app.collection.slice();
+			newCollection[0].foo = 999;
+
+			expectedData = {
+				items: newCollection,
+				total: newCollection.length
+			};
+
+			put = function() {
+				return app.tester.put(app.path).send(newCollection);
+			};
+		});
+
+		it('should respond with the new collection', function(done) {
+			put().expect(expectedData, finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			put().expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			put().expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.put(app.path + '/').send(newCollection).expect(expectedData, finishTest(done));
+		});
+
+	});
+
 	describe('PUT /path/:id', function() {
 
 		var newItem;
 
 		beforeEach(function() {
-			newItem = extend({}, app.collection[0],	{ foo: 999, bar: undefined });
+			newItem = extend({}, app.collection[0], { foo: 999, bar: undefined });
 		});
 
 		describe('when an item with that ID exists', function() {

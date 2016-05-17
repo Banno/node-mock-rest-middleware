@@ -800,6 +800,85 @@ describe('MiddlewareRule', function() {
 
 	});
 
+	describe('replaceCollection()', function() {
+
+		var data = [{
+			id: 1,
+			foo: 2
+		}, {
+			id: 2,
+			foo: 3
+		}];
+
+		describe('when passed an array of data', function() {
+
+			beforeEach(function() {
+				response = rule.replaceCollection({}, data);
+			});
+
+			it('should replace the collection with that data', function() {
+				expect(rule.getCollection().data.items).toEqual(data);
+				expect(rule.getCollection().data.total).toBe(data.length);
+			});
+
+			it('should return the new collection', function() {
+				expect(response.data.items).toEqual(data);
+				expect(response.data.total).toBe(data.length);
+			});
+
+			it('should return a 200 status', function() {
+				expect(response.status).toBe(200);
+			});
+
+		});
+
+		describe('when passed a single item', function() {
+
+			var singleItem;
+
+			beforeEach(function() {
+				singleItem = data[0];
+				response = rule.replaceCollection({}, singleItem);
+			});
+
+			it('should replace the collection with only that item', function() {
+				expect(rule.getCollection().data.items).toEqual([singleItem]);
+				expect(rule.getCollection().data.total).toBe(1);
+			});
+
+			it('should return the new collection', function() {
+				expect(response.data.items).toEqual([singleItem]);
+				expect(response.data.total).toBe(1);
+			});
+
+			it('should return a 200 status', function() {
+				expect(response.status).toBe(200);
+			});
+
+		});
+
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			rule.replaceCollection({}, data);
+			expect(rule.getCollection().data.items).toEqual([prefilterData]);
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.replaceCollection({}, data);
+			expect(response).toEqual(postfilterData);
+		});
+
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.replaceCollection(originalParams, data, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
+	});
+
 	describe('replaceItem()', function() {
 
 		var change;
