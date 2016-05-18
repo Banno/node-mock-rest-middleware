@@ -108,6 +108,21 @@ MiddlewareRule.prototype.addItem = function(params, data, req) {
 	}, req);
 };
 
+MiddlewareRule.prototype.deleteCollection = function(params, data, req) {
+	if (this.handler) { return this.handler.apply(this, arguments); }
+
+	this.prefilter(params, data, req);
+	this.collection = [];
+
+	var response = {};
+	response[this.collectionKey] = this.collection;
+	response[this.countKey] = this.collection.length;
+	return this.postfilter(params, {
+		status: 200,
+		data: response
+	}, req);
+};
+
 MiddlewareRule.prototype.deleteItem = function(params, data, req) {
 	if (this.handler) { return this.handler.apply(this, arguments); }
 

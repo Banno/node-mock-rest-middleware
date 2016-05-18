@@ -290,6 +290,49 @@ describe('MiddlewareRule', function() {
 
 	});
 
+	describe('deleteCollection()', function() {
+
+		beforeEach(function() {
+			response = rule.deleteCollection({});
+		});
+
+		it('should empty the collection', function() {
+			expect(rule.getCollection().data.items).toEqual([]);
+			expect(rule.getCollection().data.total).toBe(0);
+		});
+
+		it('should return the empty collection', function() {
+			expect(response.data.items).toEqual([]);
+			expect(response.data.total).toBe(0);
+		});
+
+		it('should return a 200 status', function() {
+			expect(response.status).toBe(200);
+		});
+
+		it('should support a prefilter', function() {
+			rule.prefilter = prefilterFunc;
+			expect(function() {
+				rule.deleteCollection({});
+			}).not.toThrow();
+		});
+
+		it('should support a postfilter', function() {
+			rule.postfilter = postfilterFunc;
+			response = rule.deleteCollection({});
+			expect(response).toEqual(postfilterData);
+		});
+
+		it('should pass the original params to a postfilter', function() {
+			var originalParams = { foo: 1 };
+			rule.prefilter = prefilterFunc;
+			rule.postfilter = postfilterFunc;
+			response = rule.deleteCollection(originalParams, {}, null);
+			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
+	});
+
 	describe('deleteItem()', function() {
 
 		var data = {

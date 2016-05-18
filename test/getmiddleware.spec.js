@@ -434,6 +434,31 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('DELETE /path', function() {
+
+		var expectedData = {
+			items: [],
+			total: 0
+		};
+
+		it('should respond with an empty collection', function(done) {
+			app.tester.delete(app.path).expect(expectedData, finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			app.tester.delete(app.path).expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			app.tester.delete(app.path).expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.delete(app.path + '/').expect(expectedData, finishTest(done));
+		});
+
+	});
+
 	describe('DELETE /path/:id', function() {
 
 		describe('when an item with that ID exists', function() {

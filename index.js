@@ -128,7 +128,7 @@ Middleware.prototype.getMiddleware = function() {
 					});
 					return;
 				} else if (req.method === 'DELETE') {
-					handleResponse(rule.deleteItem(params, null, req));
+					handleResponse(rule[params.id ? 'deleteItem' : 'deleteCollection'](params, null, req));
 					return;
 				}
 				res.writeHead(405);
