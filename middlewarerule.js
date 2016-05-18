@@ -212,13 +212,22 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	);
 
 	var textSearch = getFirstParamValue(filteredParams, this.queryParams) || null;
+	if (textSearch) {
+		this.logger.debug('Searching for text', textSearch);
+	}
+
+	var nonSpecialParams = Object.keys(filteredParams).filter(function(key) {
+		return specialParams.indexOf(key) === -1;
+	});
+	if (nonSpecialParams.length > 0) {
+		this.logger.debug('Filtering against properties', nonSpecialParams);
+	}
 
 	var filteredCollection = this.collection.filter(function(item) {
 		var matchesAll = true;
 
 		// Check against the text query params.
 		if (textSearch) {
-			this.logger.debug('Searching for text', textSearch);
 			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
 				if (item.hasOwnProperty(key)) {
 					return prevVal || String(item[key]).indexOf(textSearch) > -1;
@@ -228,9 +237,7 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		}
 
 		// Check against any non-special query params.
-		Object.keys(filteredParams).filter(function(key) {
-			return specialParams.indexOf(key) === -1;
-		}).map(function(key) {
+		nonSpecialParams.map(function(key) {
 			matchesAll = matchesAll && areEqual(item[key], filteredParams[key]);
 		});
 
