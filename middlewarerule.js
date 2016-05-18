@@ -238,7 +238,9 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 
 		// Check against any non-special query params.
 		nonSpecialParams.map(function(key) {
-			matchesAll = matchesAll && areEqual(item[key], filteredParams[key]);
+			matchesAll = matchesAll && (
+				typeof filteredParams[key] === 'undefined' || areEqual(item[key], filteredParams[key])
+			);
 		});
 
 		return matchesAll;

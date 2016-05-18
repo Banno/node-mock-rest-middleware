@@ -742,6 +742,12 @@ describe('MiddlewareRule', function() {
 				expect(response.data.total).toBe(0);
 			});
 
+			it('should ignore parameters with a value of undefined', function() {
+				response = rule.getCollection({ foo: undefined });
+				expect(response.data.items).not.toEqual([]);
+				expect(response.data.total).toBeGreaterThan(0);
+			});
+
 			it('should intersect with the "query" parameter', function() {
 				response = rule.getCollection({ foo: 'bar', query: 'baz' });
 				expect(response.data.items).toEqual([]);
