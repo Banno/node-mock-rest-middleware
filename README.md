@@ -38,21 +38,41 @@ http.createServer(app);
 
 ### addResource(path, collection, options)
 
-Adds a new resource at the given path. The path can include placeholders, e.g. `/foo/:id`.
+Adds a new resource at the given path. The path can include placeholders, e.g. `/foo/:someId`.
+
+**Note:** The path *cannot* contain an `:id` placeholder; that is reserved for use by the module.
 
 The collection argument should be the array of data that the endpoint begins with.
 
 The optional `options` object may contain:
 
 * `idKey` -- The name of the ID field. If not specified, the library will use the `id` field, or the first field that ends in `Id`, or the first field.
-* `prefilter` -- A function that runs before every request. It receives the path+query parameters, the request body (parsed as JSON), and the raw http.ClientRequest. It should return the new input in the format `{ params: paramsObject, data: bodyDataObject }` for the normal routine to use.
-* `postfilter` -- A function that runs after every request. It receives the path+query parameters, the response (in `{ status: httpResponseCode, data: responseObject }`), and the raw http.ClientRequest. It should return the new response (in the same status+response format).
+* `collectionKey` -- The property name for the collection response (default `items`).
+* `countKey` -- The property name for the collection response (default `total`).
+* `offsetParam` -- The name(s) to use for the "offset" query parameter when retrieving a collection subset (string or array of strings, default `offset`).
+* `limitParam` -- The name(s) to use for the "limit" query parameter when retrieving a collection subset (string or array of strings, default `limit`).
+* `queryParam` -- The name(s) to use for the query parameter when performing a collection text search (string or array of strings, default `['q', 'query']`).
+* `sortByParam` -- The name(s) to use for the field parameter when sorting collection results (string or array of strings, default `['sortBy']`).
+* `sortDirParam` -- The name(s) to use for the direction parameter when sorting collection results (string or array of strings, default `['sortDir']`).
 
-Returns a chainable resource.
+These options can also be changed in the rule object after it is created.
+
+The following properties can only be changed on the rule object *after* it is created.
+
+* `prefilter` -- A function that runs before every request. It receives the path+query parameters, the request body (parsed as JSON), and the raw http.ClientRequest. It should return the new input in the format `{ params: paramsObject, data: bodyDataObject }` for the normal routine to use. Note you should clone any objects you change, rather than modifying them.
+* `postfilter` -- A function that runs after every request. It receives the original path+query parameters (*unfiltered* from `prefilter`), the response (in `{ status: httpResponseCode, data: responseObject, contentType: contentTypeHeader }`), and the raw http.ClientRequest. It should return the new response (in the same status+response format). If excluded, `status` defaults to `200` and `contentType` defaults to `application/json`.
+* `handler` -- A function to use for all requests. *Overrides all of the default handling! You'll need to check the request method and run the prefilter/postfilter functions yourself.*  Receives the same arguments as `prefilter`. It should return a response in the same format as `postfilter`.
+
+Returns the new MiddlewareRule object. You can add new methods to it (or extend it) for extra/custom functionality.
 
 ### getMiddleware()
 
 Returns an array of middleware that can be used in a Connect-compatible server.
+
+### logger.enable()
+### logger.disable()
+
+Turns logging on or off (begins disabled). Useful when debugging your rules.
 
 ### useWith(app)
 
@@ -76,14 +96,19 @@ Given a base path of `/example`, the middleware creates the mock endpoints:
 * `GET /example?params` -- Returns a filtered collection. Same as above, but:
   * `offset` (zero-based) and `limit` parameters will return only a subset of the collection. Note: the returned `total` will remain the size of full collection.
   * `query` or `q` parameters will perform a partial text search. Note: All values are converted to strings for matching.
+  * `sortBy` and `sortDir` will sort the results by the top-level property specified in `sortBy`, in the direction specified by `sortDir` -- either case-insensitive `asc` (the default), or `desc` for reversed sorting.
   * Any other parameter will filter the collection using that parameter as the field name, and performing an exact string match against the value.
 * `GET /example/:id` -- Returns a single item from the collection. Returns a 404 if no match.
 * `HEAD (anything)` -- Same as `GET`, but doesn't return the body.
 * `POST /example` -- Adds a new item with the passed JSON body. Returns the new item.
+* `PUT /example` -- Replaces the entire collection with the passed JSON body. Returns the new collection.
 * `PUT /example/:id` -- Replaces the matching resource with the passed JSON body. Returns the new item. Returns a 404 if no item with that ID exists.
+* `DELETE /example` -- Empties the collection. Returns the empty collection.
 * `DELETE /example/:id` -- Removes the matching resource from the collection. Returns the deleted resource. Returns a 404 if no item with that ID exists.
 * `PATCH /example` -- Extends the matching resources using the given array of objects. It looks for an ID in each element of the array to lookup the existing items in the collection.
 * `PATCH /example/:id` -- Extends the matching resource with the given object.
+
+Don't forget to set `Content-Type: application/json` in your requests. Form data (`Content-Type: application/x-www-form-urlencoded`) are also supported.
 
 ## Contributing
 

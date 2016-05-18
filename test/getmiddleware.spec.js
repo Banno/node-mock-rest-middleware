@@ -22,6 +22,15 @@ describe('getMiddleware()', function() {
 		}).not.toThrow();
 	});
 
+	it('should allow a Content-Type response header to be specified', function(done) {
+		var customContentType = 'text/plain';
+		app.rule.postfilter = function(params, response) {
+			response.contentType = customContentType;
+			return response;
+		};
+		app.tester.get(app.path).expect('Content-Type', customContentType, finishTest(done));
+	});
+
 	describe('GET /path', function() {
 
 		it('should respond with a JSON object', function(done) {
@@ -43,6 +52,69 @@ describe('getMiddleware()', function() {
 
 		it('should work with a trailing slash in the path', function(done) {
 			app.tester.get(app.path + '/').expect(200, finishTest(done));
+		});
+
+		describe('when the collectionKey and countKey are changed', function() {
+
+			var collectionKey = 'foo';
+			var countKey = 'bar';
+
+			beforeEach(function() {
+				app = createApp({ collectionKey: collectionKey, countKey: countKey });
+			});
+
+			it('should use those keys in the response', function(done) {
+				var expectedData = {};
+				expectedData[collectionKey] = app.collection;
+				expectedData[countKey] = app.collection.length;
+				app.tester.get(app.path).expect(expectedData, finishTest(done));
+			});
+
+		});
+
+		describe('when the special parameter names are changed', function() {
+
+			var offsetParam = 'alt_offset';
+			var limitParam = 'alt_limit';
+			var queryParam = 'alt_query';
+			var params;
+
+			beforeEach(function() {
+				app = createApp({
+					offsetParam: offsetParam,
+					limitParam: limitParam,
+					queryParam: queryParam
+				});
+				params = {};
+			});
+
+			it('should work with a changed "offsetParam"', function(done) {
+				params[offsetParam] = 1;
+				var expectedData = {
+					items: app.collection.slice(params[offsetParam]),
+					total: app.collection.length
+				};
+				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
+			});
+
+			it('should work with a changed "limitParam"', function(done) {
+				params[limitParam] = 1;
+				var expectedData = {
+					items: app.collection.slice(0, params[limitParam]),
+					total: app.collection.length
+				};
+				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
+			});
+
+			it('should work with a changed "queryParam"', function(done) {
+				params[queryParam] = '42';
+				var expectedData = {
+					items: app.collection.slice(0, 1),
+					total: 1
+				};
+				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
+			});
+
 		});
 
 		describe('when parameters are specified', function() {
@@ -196,12 +268,48 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('PUT /path', function() {
+
+		var newCollection, expectedData, put;
+
+		beforeEach(function() {
+			newCollection = app.collection.slice();
+			newCollection[0].foo = 999;
+
+			expectedData = {
+				items: newCollection,
+				total: newCollection.length
+			};
+
+			put = function() {
+				return app.tester.put(app.path).send(newCollection);
+			};
+		});
+
+		it('should respond with the new collection', function(done) {
+			put().expect(expectedData, finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			put().expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			put().expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.put(app.path + '/').send(newCollection).expect(expectedData, finishTest(done));
+		});
+
+	});
+
 	describe('PUT /path/:id', function() {
 
 		var newItem;
 
 		beforeEach(function() {
-			newItem = extend({}, app.collection[0],	{ foo: 999, bar: undefined });
+			newItem = extend({}, app.collection[0], { foo: 999, bar: undefined });
 		});
 
 		describe('when an item with that ID exists', function() {
@@ -326,6 +434,31 @@ describe('getMiddleware()', function() {
 
 	});
 
+	describe('DELETE /path', function() {
+
+		var expectedData = {
+			items: [],
+			total: 0
+		};
+
+		it('should respond with an empty collection', function(done) {
+			app.tester.delete(app.path).expect(expectedData, finishTest(done));
+		});
+
+		it('should respond with a 200 code', function(done) {
+			app.tester.delete(app.path).expect(200, finishTest(done));
+		});
+
+		it('should respond with an application/json type', function(done) {
+			app.tester.delete(app.path).expect('Content-Type', 'application/json', finishTest(done));
+		});
+
+		it('should work with a trailing slash in the path', function(done) {
+			app.tester.delete(app.path + '/').expect(expectedData, finishTest(done));
+		});
+
+	});
+
 	describe('DELETE /path/:id', function() {
 
 		describe('when an item with that ID exists', function() {
@@ -372,6 +505,31 @@ describe('getMiddleware()', function() {
 
 		it('should respond with a 405 code', function(done) {
 			app.tester.options(app.path).expect(405, finishTest(done));
+		});
+
+	});
+
+	describe('when a Content-Type header is set on the request', function() {
+
+		it('should allow application/json', function(done) {
+			app.tester.post(app.path)
+				.type('application/json')
+				.send({ foobar: '42' })
+				.expect(200, finishTest(done));
+		});
+
+		it('should allow application/x-www-form-urlencoded', function(done) {
+			app.tester.post(app.path)
+				.type('application/x-www-form-urlencoded')
+				.send({ foobar: '42' })
+				.expect(200, finishTest(done));
+		});
+
+		it('should not allow other types', function(done) {
+			app.tester.post(app.path)
+				.type('application/x-foobar')
+				.send('foobar')
+				.expect(400, finishTest(done));
 		});
 
 	});

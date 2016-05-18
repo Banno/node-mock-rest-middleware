@@ -7,7 +7,8 @@ var request = require('supertest');
 var path = '/foo';
 var collection;
 
-exports.createApp = function() {
+exports.createApp = function(opts) {
+	opts = opts || {};
 	var app = connect();
 	var mocks = middleware();
 	collection = [
@@ -15,7 +16,7 @@ exports.createApp = function() {
 		{ id: 49, foo: 5, bar: 6 },
 		{ id: 77, foo: 3, bar: 4 }
 	];
-	mocks.addResource(path, collection);
+	var newRule = mocks.addResource(path, collection, opts);
 	mocks.useWith(app);
 	var testApp = request(app);
 	return {
@@ -23,6 +24,7 @@ exports.createApp = function() {
 		connectApp: app,
 		mocks: mocks,
 		path: path,
+		rule: newRule,
 		tester: testApp
 	};
 };
