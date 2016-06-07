@@ -82,6 +82,7 @@ Injects the middleware into the given Connect-compatible app.
 
 Given a base path of `/example`, the middleware creates the mock endpoints:
 
+* `/_reset` (any method) -- Special endpoint to return all collections to their original data.
 * `GET /example` -- Returns the full collection, in the format:
 
   ```javascript

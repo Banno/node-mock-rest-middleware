@@ -7,7 +7,7 @@ describe('addResource()', function() {
 
 	beforeEach(function() {
 		mocks = middleware();
-		collection = {};
+		collection = [];
 	});
 
 	it('should start with no rules', function() {

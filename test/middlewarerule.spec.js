@@ -354,6 +354,10 @@ describe('MiddlewareRule', function() {
 				expect(rule.getItem({ id: data.id }).status).toBe(404);
 			});
 
+			it('should modify the collection in place (i.e. keep the var reference)', function() {
+				expect(rule.collection).toBe(collection);
+			});
+
 			it('should return the deleted item', function() {
 				expect(response.data).toEqual(data);
 			});
@@ -1007,6 +1011,22 @@ describe('MiddlewareRule', function() {
 			rule.postfilter = postfilterFunc;
 			response = rule.replaceItem(originalParams, change, null);
 			expect(postfilterFunc).toHaveBeenCalledWith(originalParams, jasmine.any(Object), null);
+		});
+
+	});
+
+	describe('reset()', function() {
+
+		it('should replace the collection with the original data', function() {
+			var changingCollection = [
+				{ foo: 1 },
+				{ foo: 2 }
+			];
+			var originalCollection = changingCollection.slice();
+			rule = new MiddlewareRule(path, changingCollection);
+			rule.deleteCollection();
+			rule.reset();
+			expect(rule.collection).toEqual(originalCollection);
 		});
 
 	});
