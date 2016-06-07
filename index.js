@@ -68,6 +68,17 @@ Middleware.prototype.fallthroughMiddleware = function(req, res, next) {
 	next();
 };
 
+Middleware.prototype.resetMiddleware = function(req, res, next) {
+	if (req.url !== '/_reset') {
+		return next();
+	}
+	this.logger.info('Resetting rules');
+	this.rules.forEach(function(rule) {
+		rule.reset();
+	});
+	res.end('Reset successful');
+};
+
 Middleware.prototype.getMiddleware = function() {
 	var logger = this.logger;
 	return this.rules.map(function(rule) {
@@ -137,7 +148,10 @@ Middleware.prototype.getMiddleware = function() {
 			}
 			next();
 		};
-	}).concat(this.fallthroughMiddleware.bind(this));
+	}).concat(
+		this.resetMiddleware.bind(this),
+		this.fallthroughMiddleware.bind(this)
+	);
 };
 
 Middleware.prototype.useWith = function(app) {

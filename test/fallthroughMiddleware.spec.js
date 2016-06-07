@@ -2,7 +2,6 @@
 describe('fallthroughMiddleware()', function() {
 
 	var app, req, res, next;
-	// var finishTest = require('./test-helpers').finishTest;
 	var createApp = require('./test-helpers').createApp;
 
 	beforeEach(function() {

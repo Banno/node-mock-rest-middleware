@@ -7,6 +7,7 @@ module.exports = MiddlewareRule;
 
 function MiddlewareRule(path, collection, opts) {
 	this.path = path;
+	this.originalCollection = collection.slice();
 	this.collection = collection;
 	this.opts = opts || {};
 
@@ -77,6 +78,10 @@ MiddlewareRule.prototype.postfilter = function(params, data) {
 	return data;
 };
 
+MiddlewareRule.prototype.reset = function() {
+	this.collection = this.originalCollection.slice();
+};
+
 function areEqual(a, b) {
 	return String(a) === String(b);
 }
@@ -131,12 +136,12 @@ MiddlewareRule.prototype.deleteItem = function(params, data, req) {
 	data = filtered.data;
 
 	var found = null;
-	this.collection = this.collection.filter(function(item, i) {
+	// Should modify the collection in-place.
+	this.collection.forEach(function(item, i) {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
 			found = item;
-			return false;
+			delete this.collection[i];
 		}
-		return true;
 	}.bind(this));
 	return this.postfilter(params, {
 		status: found ? 200 : 404,
