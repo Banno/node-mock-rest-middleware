@@ -111,6 +111,35 @@ Given a base path of `/example`, the middleware creates the mock endpoints:
 
 Don't forget to set `Content-Type: application/json` in your requests. Form data (`Content-Type: application/x-www-form-urlencoded`) are also supported.
 
+## Tips
+
+* Turn on logging (with `logging.enable()`) to debug your rules.
+* Call the `/_reset` endpoint to reset your data.
+* Remember that the collection passed to `addResource()` must be an array (or array-like object), not an object.
+* The middleware uses the same path matching as [Connect](https://github.com/senchalabs/connect#mount-middleware) -- that is, the path only has to match the beginning of the URL path. The middleware uses the first resource that matches, so more specific paths must be defined first:
+
+  ```javascript
+  // In this example, /passwords/validate must come first.
+  // Otherwise the /passwords endpoint will always be used instead.
+  mockMiddleware.addResource('/passwords/validate', []);
+  mockMiddleware.addResource('/passwords', []);
+  ```
+
+* Always *modify* a resource's collection. Don't replace it.
+
+  ```javascript
+  yourRule.handler = function() {
+    // BAD. These create new arrays that replace the collection.
+    this.collection = this.collection.map(function(item) { /* ... */ });
+    this.collection = this.collection.filter(function(item) { /* ... */ });
+
+    // GOOD. This modifies the array in place.
+    this.collection.forEach(function(item, i) {
+      this.collection[i].someProperty = true;
+    }, this);
+  };
+  ```
+
 ## Contributing
 
 Please add tests and maintain the existing styling when adding and updating the code.
