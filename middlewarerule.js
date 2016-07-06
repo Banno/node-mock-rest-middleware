@@ -10,6 +10,7 @@ function MiddlewareRule(path, collection, opts) {
 	this.originalCollection = collection.slice();
 	this.collection = collection;
 	this.opts = opts || {};
+	this.paramFilters = [];
 
 	function guessIdProp(item) {
 		// First look for an "id" property.
@@ -225,6 +226,10 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		// Exclude special params.
 		return specialParams.indexOf(key) === -1;
 	}).filter(function(key) {
+		// Exclude custom filters.
+		var customFilterParams = this.paramFilters.map(function(filter) { return filter.param; });
+		return customFilterParams.indexOf(key) === -1;
+	}.bind(this)).filter(function(key) {
 		// Exclude path params.
 		if (!this.path.keys) { return true; }
 		return this.path.keys.every(function(pathKeyInfo) {
@@ -249,11 +254,17 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		}
 
 		// Check against any non-special query params.
-		nonSpecialParams.map(function(key) {
+		nonSpecialParams.forEach(function(key) {
 			matchesAll = matchesAll && (
 				typeof filteredParams[key] === 'undefined' || areEqual(item[key], filteredParams[key])
 			);
 		});
+
+		// Check against any custom filters.
+		this.paramFilters.forEach(function(filterInfo) {
+			var val = filteredParams[filterInfo.param];
+			matchesAll = matchesAll && filterInfo.filter(item, val);
+		}, this);
 
 		return matchesAll;
 	}.bind(this));

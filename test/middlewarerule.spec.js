@@ -41,6 +41,10 @@ describe('MiddlewareRule', function() {
 			expect(rule.handler).toBe(null);
 		});
 
+		it('should default to an empty set of paramFilters', function() {
+			expect(rule.paramFilters).toEqual([]);
+		});
+
 		it('should save the options', function() {
 			var opts = { foo: 1, bar: 2 };
 			rule = new MiddlewareRule(path, collection, opts);
@@ -754,6 +758,39 @@ describe('MiddlewareRule', function() {
 
 			it('should intersect with the "query" parameter', function() {
 				response = rule.getCollection({ foo: 'bar', query: 'baz' });
+				expect(response.data.items).toEqual([]);
+				expect(response.data.total).toBe(0);
+			});
+
+		});
+
+		describe('when a custom filter is defined', function() {
+
+			beforeEach(function() {
+				// Add filter that checks if the "foo" property equals "bar".
+				rule.paramFilters.push({
+					param: 'foobar',
+					filter: function(item, val) {
+						if (val === 'true') {
+							return item.foo === 'bar';
+						} else {
+							return item.foo !== 'bar';
+						}
+					}
+				});
+			});
+
+			it('should use the filter', function() {
+				response = rule.getCollection({ foobar: 'true' });
+				expect(response.data.items).toEqual(data.slice(1, 2));
+				expect(response.data.total).toBe(1);
+
+				response = rule.getCollection({ foobar: 'false' });
+				expect(response.data.total).toBe(2);
+			});
+
+			it('should intersect with other filters', function() {
+				response = rule.getCollection({ foobar: 'true', foo: 'pax' });
 				expect(response.data.items).toEqual([]);
 				expect(response.data.total).toBe(0);
 			});
