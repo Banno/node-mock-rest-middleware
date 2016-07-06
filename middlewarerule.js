@@ -222,8 +222,15 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	}
 
 	var nonSpecialParams = Object.keys(filteredParams).filter(function(key) {
+		// Exclude special params.
 		return specialParams.indexOf(key) === -1;
-	});
+	}).filter(function(key) {
+		// Exclude path params.
+		if (!this.path.keys) { return true; }
+		return this.path.keys.reduce(function(soFar, pathKeyInfo) {
+			return soFar && (pathKeyInfo.name === key);
+		}, true);
+	}.bind(this));
 	if (nonSpecialParams.length > 0) {
 		this.logger.debug('Filtering against properties', nonSpecialParams);
 	}

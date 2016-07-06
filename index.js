@@ -85,7 +85,14 @@ Middleware.prototype.getMiddleware = function() {
 		return function(req, res, next) {
 			function parseParams(pathRegExp) {
 				var parsed = pathRegExp.exec(req.url);
+				var mapped = pathRegExp.keys.reduce(function(soFar, key, i) {
+					if (key.name !== 0 && key.name !== 'id') {
+						soFar[key.name] = parsed[i + 1];
+					}
+					return soFar;
+				}, {});
 				return extend(
+					mapped,
 					getId(parsed, rule.path.keys) ? { id: getId(parsed, rule.path.keys) } : {},
 					getQueryParams(parsed[0])
 				);
