@@ -54,6 +54,17 @@ describe('getMiddleware()', function() {
 			app.tester.get(app.path + '/').expect(200, finishTest(done));
 		});
 
+		it('should include the path params when calling the middleware', function(done) {
+			var receivedParams = {};
+			app.rule.handler = function(params) {
+				receivedParams = params;
+			};
+			app.tester.get(app.path).end(function(err, res) {
+				expect(receivedParams.fooId).toBe(app.fooId);
+				finishTest(done)(err);
+			});
+		});
+
 		describe('when the collectionKey and countKey are changed', function() {
 
 			var collectionKey = 'foo';
@@ -161,6 +172,17 @@ describe('getMiddleware()', function() {
 			app.tester.head(app.path + '/').expect('', finishTest(done));
 		});
 
+		it('should include the path params when calling the middleware', function(done) {
+			var receivedParams = {};
+			app.rule.handler = function(params) {
+				receivedParams = params;
+			};
+			app.tester.head(app.path).end(function(err, res) {
+				expect(receivedParams.fooId).toBe(app.fooId);
+				finishTest(done)(err);
+			});
+		});
+
 	});
 
 	describe('POST /path', function() {
@@ -188,6 +210,17 @@ describe('getMiddleware()', function() {
 
 		it('should work with a trailing slash in the path', function(done) {
 			app.tester.post(app.path + '/').send(newItem).expect(newItem, finishTest(done));
+		});
+
+		it('should include the path params when calling the middleware', function(done) {
+			var receivedParams = {};
+			app.rule.handler = function(params) {
+				receivedParams = params;
+			};
+			post().end(function(err, res) {
+				expect(receivedParams.fooId).toBe(app.fooId);
+				finishTest(done)(err);
+			});
 		});
 
 	});
@@ -302,6 +335,17 @@ describe('getMiddleware()', function() {
 			app.tester.put(app.path + '/').send(newCollection).expect(expectedData, finishTest(done));
 		});
 
+		it('should include the path params when calling the middleware', function(done) {
+			var receivedParams = {};
+			app.rule.handler = function(params) {
+				receivedParams = params;
+			};
+			app.tester.put(app.path).send(newCollection).end(function(err, res) {
+				expect(receivedParams.fooId).toBe(app.fooId);
+				finishTest(done)(err);
+			});
+		});
+
 	});
 
 	describe('PUT /path/:id', function() {
@@ -382,6 +426,17 @@ describe('getMiddleware()', function() {
 			app.tester.patch(app.path + '/').send(newItems).expect(expectedItems, finishTest(done));
 		});
 
+		it('should include the path params when calling the middleware', function(done) {
+			var receivedParams = {};
+			app.rule.handler = function(params) {
+				receivedParams = params;
+			};
+			app.tester.patch(app.path).send(newItems).end(function(err, res) {
+				expect(receivedParams.fooId).toBe(app.fooId);
+				finishTest(done)(err);
+			});
+		});
+
 	});
 
 	describe('PATCH /path/:id', function() {
@@ -455,6 +510,17 @@ describe('getMiddleware()', function() {
 
 		it('should work with a trailing slash in the path', function(done) {
 			app.tester.delete(app.path + '/').expect(expectedData, finishTest(done));
+		});
+
+		it('should include the path params when calling the middleware', function(done) {
+			var receivedParams = {};
+			app.rule.handler = function(params) {
+				receivedParams = params;
+			};
+			app.tester.delete(app.path).end(function(err, res) {
+				expect(receivedParams.fooId).toBe(app.fooId);
+				finishTest(done)(err);
+			});
 		});
 
 	});

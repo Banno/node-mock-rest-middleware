@@ -4,26 +4,29 @@ var middleware = require('../');
 var connect = require('connect');
 var request = require('supertest');
 
-var path = '/foo';
+var path = '/foo/:fooId/bar';
 var collection;
 
 exports.createApp = function(opts) {
 	opts = opts || {};
 	var app = connect();
 	var mocks = middleware();
+	var fooId = 'fooIdValue';
 	collection = [
 		{ id: 42, foo: 1, bar: 2 },
 		{ id: 49, foo: 5, bar: 6 },
 		{ id: 77, foo: 3, bar: 4 }
 	];
 	var newRule = mocks.addResource(path, collection, opts);
+	// mocks.logger.enable();
 	mocks.useWith(app);
 	var testApp = request(app);
 	return {
 		collection: collection,
 		connectApp: app,
 		mocks: mocks,
-		path: path,
+		fooId: fooId,
+		path: path.replace(':fooId', fooId),
 		rule: newRule,
 		tester: testApp
 	};

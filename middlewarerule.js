@@ -222,8 +222,15 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	}
 
 	var nonSpecialParams = Object.keys(filteredParams).filter(function(key) {
+		// Exclude special params.
 		return specialParams.indexOf(key) === -1;
-	});
+	}).filter(function(key) {
+		// Exclude path params.
+		if (!this.path.keys) { return true; }
+		return this.path.keys.every(function(pathKeyInfo) {
+			return pathKeyInfo.name === key;
+		});
+	}.bind(this));
 	if (nonSpecialParams.length > 0) {
 		this.logger.debug('Filtering against properties', nonSpecialParams);
 	}
@@ -233,12 +240,12 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 
 		// Check against the text query params.
 		if (textSearch) {
-			matchesAll = Object.keys(item).reduce(function(prevVal, key) {
+			matchesAll = Object.keys(item).some(function(key) {
 				if (item.hasOwnProperty(key)) {
-					return prevVal || String(item[key]).indexOf(textSearch) > -1;
+					return String(item[key]).indexOf(textSearch) > -1;
 				}
-				return prevVal;
-			}, false);
+				return false;
+			});
 		}
 
 		// Check against any non-special query params.
