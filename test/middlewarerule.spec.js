@@ -2,9 +2,10 @@
 describe('MiddlewareRule', function() {
 
 	var MiddlewareRule = require('../')().MiddlewareRule;
+	var pathToRegexp = require('path-to-regexp');
 
 	var path = '/foo';
-	var collection, rule, response;
+	var pathAsRegExp, collection, rule, response;
 
 	var prefilterFunc, postfilterFunc;
 	var prefilterData = { filtered: 'prefilter' };
@@ -20,13 +21,14 @@ describe('MiddlewareRule', function() {
 
 	beforeEach(function() {
 		collection = [];
-		rule = new MiddlewareRule(path, collection);
+		pathAsRegExp = pathToRegexp(path + '/:id?(\\?.*)?', undefined, { sensitive: true, strict: false });
+		rule = new MiddlewareRule(pathAsRegExp, collection);
 	});
 
 	describe('constructor', function() {
 
 		it('should save the path', function() {
-			expect(rule.path).toBe(path);
+			expect(rule.path).toBe(pathAsRegExp);
 		});
 
 		it('should save the collection', function() {
