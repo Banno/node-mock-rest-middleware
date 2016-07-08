@@ -233,7 +233,7 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		// Exclude path params.
 		if (!this.path.keys) { return true; }
 		return this.path.keys.every(function(pathKeyInfo) {
-			return pathKeyInfo.name === key;
+			return pathKeyInfo.name !== key;
 		});
 	}.bind(this));
 	if (nonSpecialParams.length > 0) {
