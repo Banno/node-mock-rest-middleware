@@ -7,7 +7,7 @@ module.exports = MiddlewareRule;
 
 function MiddlewareRule(path, collection, opts) {
 	this.path = path;
-	this.originalCollection = collection.slice();
+	this.originalCollection = extend(true, [], collection);
 	this.collection = collection;
 	this.opts = opts || {};
 	this.paramFilters = [];
@@ -80,7 +80,7 @@ MiddlewareRule.prototype.postfilter = function(params, data) {
 };
 
 MiddlewareRule.prototype.reset = function() {
-	this.collection = this.originalCollection.slice();
+	this.collection = extend(true, [], this.originalCollection);
 };
 
 function areEqual(a, b) {

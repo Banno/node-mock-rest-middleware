@@ -2,6 +2,7 @@
 describe('MiddlewareRule', function() {
 
 	var MiddlewareRule = require('../')().MiddlewareRule;
+	var extend = require('extend');
 	var pathToRegexp = require('path-to-regexp');
 
 	var path = '/foo';
@@ -1066,6 +1067,19 @@ describe('MiddlewareRule', function() {
 			rule.deleteCollection();
 			rule.reset();
 			expect(rule.collection).toEqual(originalCollection);
+		});
+
+		it('should perform a deep clone', function() {
+			var nestedObject = { foo: 3, bar: 4 };
+			var changingCollection = [
+				{ foo: 1 },
+				nestedObject
+			];
+			var originalCollection = extend(true, [], changingCollection);
+			rule = new MiddlewareRule(path, changingCollection);
+			nestedObject.foo = 999;
+			rule.reset();
+			expect(rule.collection[1].foo).toEqual(originalCollection[1].foo);
 		});
 
 	});
