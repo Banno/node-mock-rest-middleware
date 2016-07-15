@@ -136,6 +136,8 @@ Don't forget to set `Content-Type: application/json` in your requests. Form data
   mockMiddleware.addResource('/passwords', []);
   ```
 
+* Start with the [built-in behavior](README.md#rest-endpoints). If needed, tweak the [`addResource()` options](README.md#addresourcepath-collection-options) (`idKey`, `collectionKey`, etc). Minor changes to the default behavior can be achieved with [`paramFilters`, `prefilter`, and `postfilter`](README.md#addresourcepath-collection-options). Individual endpoints can be overridden by redefining [the MiddlewareRule methods](https://github.com/Banno/node-mock-rest-middleware/blob/master/middlewarerule.js) (`addItem()`, `deleteCollection()`, etc). Finally, you can set a [`handler()` method](README.md#addresourcepath-collection-options) to override *all* of the endpoints.
+* For testing, you can create a simple server (see [Usage](README.md#usage)) to run your mocks. Then you can test the endpoints using any HTTP client (such as curl, [http-console](https://www.npmjs.com/package/http-console), or [Postman](https://www.getpostman.com/)).
 * Always *modify* a resource's collection. Don't replace it.
 
   ```javascript
@@ -149,6 +151,17 @@ Don't forget to set `Content-Type: application/json` in your requests. Form data
       this.collection[i].someProperty = true;
     }, this);
   };
+  ```
+
+* Need to share a collection between multiple endpoints? You can point to another collection during a reset:
+
+  ```javascript
+  var animalRule = mockMiddleware.addResource('/animals', animalCollection);
+  var petRule = mockMiddleware.addResource('/pets', []);
+  petRule.reset = function() {
+    this.collection = animalRule.collection;
+  };
+  petRule.reset();
   ```
 
 ## Contributing
