@@ -164,6 +164,12 @@ Don't forget to set `Content-Type: application/json` in your requests. Form data
   petRule.reset();
   ```
 
+* In your project, use the included `test-mock-server.js` script to start a test server using your mocks:
+
+  ```
+  ./node_modules/.bin/test-mock-server ./mocks
+  ```
+
 ## Contributing
 
 Please add tests and maintain the existing styling when adding and updating the code.
