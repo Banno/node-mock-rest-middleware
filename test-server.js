@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+'use strict';
+
 var defaultOpts = {
 	default: {
 		port: 8080
