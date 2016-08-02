@@ -1,5 +1,6 @@
 {
 	"jshint": {
-		"node": true
+		"node": true,
+		"esversion": 6
 	}
 }

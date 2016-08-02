@@ -15,18 +15,22 @@
     "rest",
     "middleware"
   ],
+  "bin": {
+    "test-mock-server": "./test-server.js"
+  },
   "scripts": {
     "lint": "ux-lint *.js test/*.js --extend .lintrc",
     "test": "JASMINE_CONFIG_PATH=test/jasmine.json jasmine"
   },
   "dependencies": {
     "body": "^5.1.0",
+    "connect": "^3.4.1",
     "extend": "^3.0.0",
     "minilog": "^3.0.0",
+    "minimist": "^1.2.0",
     "path-to-regexp": "1.2.x"
   },
   "devDependencies": {
-    "connect": "^3.4.1",
     "jasmine": "^2.4.1",
     "supertest": "^1.2.0",
     "ux-lint": "^1.2.0"
