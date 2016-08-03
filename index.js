@@ -101,8 +101,12 @@ Middleware.prototype.getMiddleware = function() {
 				logger.debug('...returning response:', response);
 				response = response || {};
 				response.status = response.status || 200;
+				response.headers = response.headers || {};
 				response.contentType = response.contentType || 'application/json';
 				res.setHeader('Content-Type', response.contentType);
+				Object.keys(response.headers).forEach(function(header) {
+					res.setHeader(header, response.headers[header]);
+				});
 				res.writeHead(response.status);
 				if (response.data) {
 					res.end(typeof response.data === 'object' ? JSON.stringify(response.data) : response.data);

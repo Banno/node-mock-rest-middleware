@@ -31,6 +31,20 @@ describe('getMiddleware()', function() {
 		app.tester.get(app.path).expect('Content-Type', customContentType, finishTest(done));
 	});
 
+	it('should allow arbitrary response headers to be specified', function(done) {
+		var headers = {
+			'Content-Type': 'text/plain',
+			'Content-Disposition': 'attachment; filename=example.txt'
+		};
+		app.rule.postfilter = function(params, response) {
+			response.headers = headers;
+			return response;
+		};
+		app.tester.get(app.path)
+			.expect('Content-Type', headers['Content-Type'])
+			.expect('Content-Disposition', headers['Content-Disposition'], finishTest(done));
+	});
+
 	describe('GET /path', function() {
 
 		it('should respond with a JSON object', function(done) {
