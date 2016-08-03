@@ -101,9 +101,13 @@ Middleware.prototype.getMiddleware = function() {
 				logger.debug('...returning response:', response);
 				response = response || {};
 				response.status = response.status || 200;
-				response.headers = response.headers || {};
-				response.contentType = response.contentType || 'application/json';
-				res.setHeader('Content-Type', response.contentType);
+				if (response.contentType) {
+					logger.warn('The "contentType" response property is deprecated. Use "headers[\'Content-Type\']" instead.');
+				}
+				response.headers = extend(
+					{ 'Content-Type': response.contentType || 'application/json' },
+					response.headers
+				);
 				Object.keys(response.headers).forEach(function(header) {
 					res.setHeader(header, response.headers[header]);
 				});
@@ -125,7 +129,11 @@ Middleware.prototype.getMiddleware = function() {
 				} else if (req.method === 'POST') {
 					anyBody(req, res, function(err, body) {
 						if (err) {
-							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
+							handleResponse({
+								status: 400,
+								data: 'Invalid request. ' + err.message,
+								headers: { 'Content-Type': 'text/plain' }
+							});
 							return;
 						}
 						handleResponse(rule.addItem(params, body, req));
@@ -134,7 +142,11 @@ Middleware.prototype.getMiddleware = function() {
 				} else if (req.method === 'PUT') {
 					anyBody(req, res, function(err, body) {
 						if (err) {
-							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
+							handleResponse({
+								status: 400,
+								data: 'Invalid request. ' + err.message,
+								headers: { 'Content-Type': 'text/plain' }
+							});
 							return;
 						}
 						handleResponse(rule[params.id ? 'replaceItem' : 'replaceCollection'](params, body, req));
@@ -143,7 +155,11 @@ Middleware.prototype.getMiddleware = function() {
 				} else if (req.method === 'PATCH') {
 					anyBody(req, res, function(err, body) {
 						if (err) {
-							handleResponse({ status: 400, data: 'Invalid request. ' + err.message, contentType: 'text/plain' });
+							handleResponse({
+								status: 400,
+								data: 'Invalid request. ' + err.message,
+								headers: { 'Content-Type': 'text/plain' }
+							});
 							return;
 						}
 						handleResponse(rule[params.id ? 'extendItem' : 'extendCollection'](params, body, req));
