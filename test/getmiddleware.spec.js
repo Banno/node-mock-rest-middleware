@@ -24,11 +24,30 @@ describe('getMiddleware()', function() {
 
 	it('should allow a Content-Type response header to be specified', function(done) {
 		var customContentType = 'text/plain';
+		spyOn(app.mocks.logger, 'warn');
 		app.rule.postfilter = function(params, response) {
 			response.contentType = customContentType;
 			return response;
 		};
-		app.tester.get(app.path).expect('Content-Type', customContentType, finishTest(done));
+		app.tester.get(app.path).expect('Content-Type', customContentType).end(function(err, res) {
+			if (!app.mocks.logger.warn.calls.any()) { finishTest(done)('logger.warn() was not called'); }
+			finishTest(done)(err);
+		});
+
+	});
+
+	it('should allow arbitrary response headers to be specified', function(done) {
+		var headers = {
+			'Content-Type': 'text/plain',
+			'Content-Disposition': 'attachment; filename=example.txt'
+		};
+		app.rule.postfilter = function(params, response) {
+			response.headers = headers;
+			return response;
+		};
+		app.tester.get(app.path)
+			.expect('Content-Type', headers['Content-Type'])
+			.expect('Content-Disposition', headers['Content-Disposition'], finishTest(done));
 	});
 
 	describe('GET /path', function() {
