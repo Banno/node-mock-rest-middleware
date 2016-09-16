@@ -17,4 +17,22 @@ describe('module', function() {
 		expect(obj1).not.toBe(obj2);
 	});
 
+	describe('options', function() {
+
+		it('should default to empty options', function() {
+			expect(middleware().opts).toEqual({});
+		});
+
+		it('should accept an options object as an argument', function() {
+			expect(middleware({ foo: true }).opts.foo).toBe(true);
+		});
+
+		it('should pass the options along to addResource()', function() {
+			var m = middleware({ fingerprinting: false });
+			var rule = m.addResource('/foo', []);
+			expect(rule.fingerprinting).toBe(false);
+		});
+
+	});
+
 });

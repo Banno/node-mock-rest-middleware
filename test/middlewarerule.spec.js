@@ -4,6 +4,7 @@ describe('MiddlewareRule', function() {
 	var MiddlewareRule = require('../')().MiddlewareRule;
 	var extend = require('extend');
 	var pathToRegexp = require('path-to-regexp');
+	var sha1 = require('sha1');
 
 	var path = '/foo';
 	var pathAsRegExp, collection, rule, response;
@@ -32,12 +33,17 @@ describe('MiddlewareRule', function() {
 			expect(rule.path).toBe(pathAsRegExp);
 		});
 
-		it('should save the collection', function() {
-			expect(rule.collection).toBe(collection);
+		it('should save the initial collection as the "default"', function() {
+			expect(rule.collections).toEqual(jasmine.any(Object));
+			expect(rule.collections.default).toBe(collection);
 		});
 
 		it('should default to an empty set for options', function() {
 			expect(rule.opts).toEqual({});
+		});
+
+		it('should default with fingerprinting enabled', function() {
+			expect(rule.fingerprinting).toBe(true);
 		});
 
 		it('should default to a null handler', function() {
@@ -362,7 +368,7 @@ describe('MiddlewareRule', function() {
 			});
 
 			it('should modify the collection in place (i.e. keep the var reference)', function() {
-				expect(rule.collection).toBe(collection);
+				expect(rule.collections.default).toBe(collection);
 			});
 
 			it('should return the deleted item', function() {
@@ -1057,6 +1063,16 @@ describe('MiddlewareRule', function() {
 
 	describe('reset()', function() {
 
+		it('should delete all the collections except for the default', function() {
+			collection = [{ foo: 1 }, { foo: 2 }];
+			rule = new MiddlewareRule(pathAsRegExp, collection);
+			rule.collections.copy1 = extend(true, [], collection);
+			rule.collections.copy2 = extend(true, [], collection);
+			rule.reset();
+			expect(Object.keys(rule.collections).length).toBe(1);
+			expect(rule.collections.default).toEqual(collection);
+		});
+
 		it('should replace the collection with the original data', function() {
 			var changingCollection = [
 				{ foo: 1 },
@@ -1066,7 +1082,7 @@ describe('MiddlewareRule', function() {
 			rule = new MiddlewareRule(path, changingCollection);
 			rule.deleteCollection();
 			rule.reset();
-			expect(rule.collection).toEqual(originalCollection);
+			expect(rule.collections.default).toEqual(originalCollection);
 		});
 
 		it('should perform a deep clone', function() {
@@ -1079,7 +1095,190 @@ describe('MiddlewareRule', function() {
 			rule = new MiddlewareRule(path, changingCollection);
 			nestedObject.foo = 999;
 			rule.reset();
-			expect(rule.collection[1].foo).toEqual(originalCollection[1].foo);
+			expect(rule.collections.default[1].foo).toEqual(originalCollection[1].foo);
+		});
+
+	});
+
+	describe('setupCollection()', function() {
+
+		var key, expectedKey;
+
+		it('should not throw an error if a request is not specified', function() {
+			expect(function() {
+				rule.setupCollection();
+			}).not.toThrow();
+		});
+
+		it('should not throw an error if the request does not have "headers"', function() {
+			expect(function() {
+				rule.setupCollection({});
+			}).not.toThrow();
+		});
+
+		describe('when the request has a previously-unseen "user-agent" header', function() {
+
+			beforeEach(function() {
+				var uaValue = 'user agent';
+				expectedKey = sha1(uaValue);
+				key = rule.setupCollection({
+					headers: {
+						'user-agent': uaValue
+					}
+				});
+			});
+
+			it('should create a new collection', function() {
+				expect(Object.keys(rule.collections).length).toBe(2);
+			});
+
+			it('should return a SHA1 hash of the header value', function() {
+				expect(key).toBe(expectedKey);
+			});
+
+		});
+
+		describe('when the request has a previously-seen "user-agent" header', function() {
+
+			beforeEach(function() {
+				var uaValue = 'user agent';
+				expectedKey = sha1(uaValue);
+				rule.setupCollection({
+					headers: {
+						'user-agent': uaValue
+					}
+				});
+				key = rule.setupCollection({
+					headers: {
+						'user-agent': uaValue
+					}
+				});
+			});
+
+			it('should not create a new collection', function() {
+				expect(Object.keys(rule.collections).length).toBe(2);
+			});
+
+			it('should return a SHA1 hash of the header value', function() {
+				expect(key).toBe(expectedKey);
+			});
+
+		});
+
+		describe('when the request does NOT have a "user-agent" header', function() {
+
+			beforeEach(function() {
+				key = rule.setupCollection({
+					headers: {}
+				});
+			});
+
+			it('should not create a new collection', function() {
+				expect(Object.keys(rule.collections).length).toBe(1);
+			});
+
+			it('should return "default"', function() {
+				expect(key).toBe('default');
+			});
+
+		});
+
+		describe('when fingerprinting is turned off', function() {
+
+			beforeEach(function() {
+				rule.fingerprinting = false;
+				key = rule.setupCollection({
+					headers: {
+						'user-agent': 'user agent'
+					}
+				});
+			});
+
+			it('should not create a new collection', function() {
+				expect(Object.keys(rule.collections).length).toBe(1);
+			});
+
+			it('should return "default"', function() {
+				expect(key).toBe('default');
+			});
+
+		});
+
+	});
+
+	describe('user agent fingerprinting', function() {
+
+		var expectedNumCollections = 3; // default + 2 UAs
+		var asUa = function(index) {
+			var req = {
+				headers: {
+					'user-agent': 'user agent ' + index
+				}
+			};
+			return req;
+		};
+
+		beforeEach(function() {
+			rule = new MiddlewareRule(pathAsRegExp, collection);
+			rule.addItem({}, { id: 9 }, null);
+			rule.addItem({}, { id: 9, ua: 1 }, asUa(1));
+			rule.addItem({}, { id: 9, ua: 2 }, asUa(2));
+		});
+
+		it('should work with addItem()', function() {
+			expect(Object.keys(rule.collections).length).toBe(expectedNumCollections);
+		});
+
+		it('should work with deleteCollection()', function() {
+			rule.deleteCollection({}, null, asUa(1));
+			expect(rule.getCollection({}, null, asUa(1)).data.items.length).toBe(0);
+			expect(rule.getCollection({}, null, asUa(2)).data.items.length).toBe(1);
+			expect(rule.getCollection({}, null, null).data.items.length).toBe(1);
+		});
+
+		it('should work with deleteItem()', function() {
+			rule.deleteItem({ id: 9 }, null, asUa(1));
+			expect(rule.getCollection({}, null, asUa(1)).data.items.length).toBe(0);
+			expect(rule.getCollection({}, null, asUa(2)).data.items.length).toBe(1);
+			expect(rule.getCollection({}, null, null).data.items.length).toBe(1);
+		});
+
+		it('should work with extendCollection()', function() {
+			rule.extendCollection({}, { id: 9, ua: 1, foo: 42 }, asUa(1));
+			expect(rule.getItem({ id: 9 }, null, asUa(1)).data.foo).toBe(42);
+			expect(rule.getItem({ id: 9 }, null, asUa(2)).data.foo).toBeUndefined();
+			expect(rule.getItem({ id: 9 }, null, null).data.foo).toBeUndefined();
+		});
+
+		it('should work with extendItem()', function() {
+			rule.extendItem({ id: 9 }, { foo: 42 }, asUa(1));
+			expect(rule.getItem({ id: 9 }, null, asUa(1)).data.foo).toBe(42);
+			expect(rule.getItem({ id: 9 }, null, asUa(2)).data.foo).toBeUndefined();
+			expect(rule.getItem({ id: 9 }, null, null).data.foo).toBeUndefined();
+		});
+
+		it('should work with getCollection()', function() {
+			var result = rule.getCollection({}, null, asUa(1)).data.items;
+			expect(result).toEqual([{ id: 9, ua: 1 }]);
+		});
+
+		it('should work with getItem()', function() {
+			var result = rule.getItem({ id: 9 }, null, asUa(1)).data;
+			expect(result).toEqual({ id: 9, ua: 1 });
+		});
+
+		it('should work with replaceCollection()', function() {
+			rule.replaceCollection({}, { id: 10, ua: 1 }, asUa(1));
+			expect(rule.getCollection({}, null, asUa(1)).data.items).toEqual([{ id: 10, ua: 1 }]);
+			expect(rule.getCollection({}, null, asUa(2)).data.items).toEqual([{ id: 9, ua: 2 }]);
+			expect(rule.getCollection({}, null, null).data.items).toEqual([{ id: 9 }]);
+		});
+
+		it('should work with replaceItem()', function() {
+			rule.replaceItem({ id: 9 }, { id: 9, ua: 1, foo: 42 }, asUa(1));
+			expect(rule.getItem({ id: 9 }, null, asUa(1)).data.foo).toBe(42);
+			expect(rule.getItem({ id: 9 }, null, asUa(2)).data.foo).toBeUndefined();
+			expect(rule.getItem({ id: 9 }, null, null).data.foo).toBeUndefined();
 		});
 
 	});

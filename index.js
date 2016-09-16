@@ -7,8 +7,9 @@ var pathToRegexp = require('path-to-regexp');
 var parseUrl = require('url').parse;
 var pkgName = require('./package.json').name;
 
-function Middleware() {
+function Middleware(opts) {
 	this.MiddlewareRule = MiddlewareRule; // mainly for testing
+	this.opts = extend({}, opts);
 	this.rules = [];
 
 	var minilog = require('minilog');
@@ -41,7 +42,7 @@ function getQueryParams(url) {
 
 // Note: path cannot contain an ":id" placeholder. That is reserved.
 Middleware.prototype.addResource = function(path, collection, opts) {
-	opts = opts || {};
+	opts = extend({}, this.opts, opts);
 	if (typeof path === 'undefined') {
 		throw new Error('A path must be passed to addResource()');
 	}
@@ -185,7 +186,7 @@ Middleware.prototype.useWith = function(app) {
 	this.getMiddleware().map(app.use.bind(app));
 };
 
-module.exports = function() {
-	return new Middleware();
+module.exports = function(opts) {
+	return new Middleware(opts);
 };
 

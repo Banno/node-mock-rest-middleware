@@ -2,14 +2,21 @@
 
 var extend = require('extend');
 var pkgName = require('./package.json').name;
+var sha1 = require('sha1');
 
 module.exports = MiddlewareRule;
 
 function MiddlewareRule(path, collection, opts) {
 	this.path = path;
 	this.originalCollection = extend(true, [], collection);
-	this.collection = collection;
+	this.collections = {
+		default: collection
+	};
 	this.opts = opts || {};
+	this.fingerprinting = (typeof this.opts.fingerprinting === 'undefined' ?
+		true :
+		Boolean(this.opts.fingerprinting)
+	);
 	this.paramFilters = [];
 
 	function guessIdProp(item) {
@@ -27,7 +34,7 @@ function MiddlewareRule(path, collection, opts) {
 		// Otherwise use the first property, or simply "id".
 		return Object.keys(item)[0] || 'id';
 	}
-	this.idKey = this.opts.idKey || guessIdProp(this.collection[0] || {});
+	this.idKey = this.opts.idKey || guessIdProp(this.collections.default[0] || {});
 
 	// Set the collection keys, if specified.
 	if (this.opts.collectionKey) { this.collectionKey = this.opts.collectionKey; }
@@ -80,7 +87,24 @@ MiddlewareRule.prototype.postfilter = function(params, data) {
 };
 
 MiddlewareRule.prototype.reset = function() {
-	this.collection = extend(true, [], this.originalCollection);
+	this.collections = {
+		default: extend(true, [], this.originalCollection)
+	};
+};
+
+// Sets up a collection in this.collections for the given request.
+// Returns the key for this.collections.
+MiddlewareRule.prototype.setupCollection = function(req) {
+	if (!this.fingerprinting) { return 'default'; }
+	var key = req && req.headers && req.headers['user-agent'] ?
+		sha1(req.headers['user-agent']) :
+		'default';
+	this.logger.debug('User-Agent hash is', key);
+	if (!this.collections[key]) {
+		this.logger.debug('Creating collection for', key);
+		this.collections[key] = extend(true, [], this.originalCollection);
+	}
+	return key;
 };
 
 function areEqual(a, b) {
@@ -102,12 +126,13 @@ function areEqual(a, b) {
 MiddlewareRule.prototype.handler = null;
 
 MiddlewareRule.prototype.addItem = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filtered = this.prefilter(params, data, req);
 	data = filtered.data;
 
-	this.collection.push(data);
+	this.collections[key].push(data);
 	return this.postfilter(params, {
 		status: 200,
 		data: data
@@ -115,14 +140,15 @@ MiddlewareRule.prototype.addItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.deleteCollection = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	this.prefilter(params, data, req);
-	this.collection = [];
+	this.collections[key] = [];
 
 	var response = {};
-	response[this.collectionKey] = this.collection;
-	response[this.countKey] = this.collection.length;
+	response[this.collectionKey] = this.collections[key];
+	response[this.countKey] = this.collections[key].length;
 	return this.postfilter(params, {
 		status: 200,
 		data: response
@@ -130,6 +156,7 @@ MiddlewareRule.prototype.deleteCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.deleteItem = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filtered = this.prefilter(params, data, req);
@@ -138,10 +165,10 @@ MiddlewareRule.prototype.deleteItem = function(params, data, req) {
 
 	var found = null;
 	// Should modify the collection in-place.
-	this.collection.forEach(function(item, i) {
+	this.collections[key].forEach(function(item, i) {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
 			found = item;
-			delete this.collection[i];
+			delete this.collections[key][i];
 		}
 	}.bind(this));
 	return this.postfilter(params, {
@@ -151,6 +178,7 @@ MiddlewareRule.prototype.deleteItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.extendCollection = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filtered = this.prefilter(params, data, req);
@@ -158,10 +186,10 @@ MiddlewareRule.prototype.extendCollection = function(params, data, req) {
 
 	var found = [];
 	data.forEach(function(newItem) {
-		this.collection.forEach(function(item, i) {
+		this.collections[key].forEach(function(item, i) {
 			if (areEqual(item[this.idKey], newItem[this.idKey])) {
-				extend(this.collection[i], newItem);
-				found.push(this.collection[i]);
+				extend(this.collections[key][i], newItem);
+				found.push(this.collections[key][i]);
 			}
 		}.bind(this));
 	}.bind(this));
@@ -172,6 +200,7 @@ MiddlewareRule.prototype.extendCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.extendItem = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filtered = this.prefilter(params, data, req);
@@ -179,9 +208,9 @@ MiddlewareRule.prototype.extendItem = function(params, data, req) {
 	data = filtered.data;
 
 	var found = null;
-	this.collection.map(function(item, i) {
+	this.collections[key].map(function(item, i) {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
-			found = extend(this.collection[i], data);
+			found = extend(this.collections[key][i], data);
 			return found;
 		}
 	}.bind(this));
@@ -192,6 +221,7 @@ MiddlewareRule.prototype.extendItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.getCollection = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	params = params || {}; // mainly for testing; this should always be an object when used with the middleware
@@ -240,7 +270,7 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		this.logger.debug('Filtering against properties', nonSpecialParams);
 	}
 
-	var filteredCollection = this.collection.filter(function(item) {
+	var filteredCollection = this.collections[key].filter(function(item) {
 		var matchesAll = true;
 
 		// Check against the text query params.
@@ -289,7 +319,7 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 	var offset = getFirstParamValue(filteredParams, this.offsetParams);
 	offset = offset ? parseInt(offset, 10) : 0;
 	var limit = getFirstParamValue(filteredParams, this.limitParams);
-	limit = limit ? parseInt(limit, 10) : this.collection.length;
+	limit = limit ? parseInt(limit, 10) : this.collections[key].length;
 	this.logger.debug('Returning collection of', limit, 'items, starting at offset', offset);
 	var itemsSubset = filteredCollection.slice(offset, offset + limit);
 	var response = {};
@@ -302,13 +332,14 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.getItem = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filteredInput = this.prefilter(params, data, req);
 	var filteredParams = filteredInput.params;
 	data = filteredInput.data;
 
-	var filtered = this.collection.filter(function(item) {
+	var filtered = this.collections[key].filter(function(item) {
 		return areEqual(item[this.idKey], filteredParams.id);
 	}.bind(this));
 	return this.postfilter(params, {
@@ -318,13 +349,14 @@ MiddlewareRule.prototype.getItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.replaceCollection = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filtered = this.prefilter(params, data, req);
-	this.collection = filtered.data instanceof Array ? filtered.data : [filtered.data];
+	this.collections[key] = filtered.data instanceof Array ? filtered.data : [filtered.data];
 	var response = {};
-	response[this.collectionKey] = this.collection;
-	response[this.countKey] = this.collection.length;
+	response[this.collectionKey] = this.collections[key];
+	response[this.countKey] = this.collections[key].length;
 	return this.postfilter(params, {
 		status: 200,
 		data: response
@@ -332,14 +364,15 @@ MiddlewareRule.prototype.replaceCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.replaceItem = function(params, data, req) {
+	var key = this.setupCollection(req);
 	if (this.handler) { return this.handler.apply(this, arguments); }
 
 	var filtered = this.prefilter(params, data, req);
 	var filteredParams = filtered.params;
 	var found = null;
-	this.collection.map(function(item, i) {
+	this.collections[key].map(function(item, i) {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
-			found = this.collection[i] = data;
+			found = this.collections[key][i] = data;
 			return found;
 		}
 	}.bind(this));

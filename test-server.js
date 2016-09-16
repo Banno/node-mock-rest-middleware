@@ -18,7 +18,7 @@ if (opts._.length === 0) {
 }
 
 var createMocks = require('./');
-var mocks = createMocks();
+var mocks = createMocks({ fingerprinting: true });
 mocks.logger.enable();
 
 opts._.forEach(function(module) {
