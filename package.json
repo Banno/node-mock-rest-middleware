@@ -28,7 +28,8 @@
     "extend": "^3.0.0",
     "minilog": "^3.0.0",
     "minimist": "^1.2.0",
-    "path-to-regexp": "1.2.x"
+    "path-to-regexp": "1.2.x",
+    "sha1": "^1.1.1"
   },
   "devDependencies": {
     "jasmine": "^2.4.1",
