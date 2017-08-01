@@ -1,17 +1,17 @@
 'use strict';
 
-var extend = require('extend');
-var anyBody = require('body/any');
-var MiddlewareRule = require('./middlewarerule');
-var pathToRegexp = require('path-to-regexp');
-var parseUrl = require('url').parse;
-var pkgName = require('./package.json').name;
+const extend = require('extend');
+const anyBody = require('body/any');
+const MiddlewareRule = require('./middlewarerule');
+const pathToRegexp = require('path-to-regexp');
+const parseUrl = require('url').parse;
+const pkgName = require('./package.json').name;
 
 function Middleware() {
 	this.MiddlewareRule = MiddlewareRule; // mainly for testing
 	this.rules = [];
 
-	var minilog = require('minilog');
+	const minilog = require('minilog');
 	this.logger = minilog(pkgName);
 	this.logger.enable = minilog.enable;
 	this.logger.disable = minilog.disable;
@@ -19,8 +19,9 @@ function Middleware() {
 
 function getId(parsed, pathKeys) {
 	// Find the index of the :id placeholder in the path.
-	var keys = Object.keys(pathKeys);
-	for (var idIndex = 0; idIndex < keys.length; idIndex++) {
+	const keys = Object.keys(pathKeys);
+	let idIndex;
+	for (idIndex = 0; idIndex < keys.length; idIndex++) {
 		if (pathKeys[keys[idIndex]].name === 'id') {
 			break;
 		}
@@ -49,7 +50,7 @@ Middleware.prototype.addResource = function(path, collection, opts) {
 		throw new Error('A collection must be passed to addResource()');
 	}
 
-	var rule = new MiddlewareRule(
+	const rule = new MiddlewareRule(
 		pathToRegexp(path + '/:id?(\\?.*)?', undefined, { sensitive: true, strict: false }),
 		collection,
 		opts
@@ -73,19 +74,19 @@ Middleware.prototype.resetMiddleware = function(req, res, next) {
 		return next();
 	}
 	this.logger.info('Resetting rules');
-	this.rules.forEach(function(rule) {
+	this.rules.forEach((rule) => {
 		rule.reset();
 	});
 	res.end('Reset successful');
 };
 
 Middleware.prototype.getMiddleware = function() {
-	var logger = this.logger;
-	return this.rules.map(function(rule) {
+	const logger = this.logger;
+	return this.rules.map((rule) => {
 		return function(req, res, next) {
 			function parseParams(pathRegExp) {
-				var parsed = pathRegExp.exec(req.url);
-				var mapped = pathRegExp.keys.reduce(function(soFar, key, i) {
+				let parsed = pathRegExp.exec(req.url);
+				let mapped = pathRegExp.keys.reduce((soFar, key, i) => {
 					if (key.name !== 0 && key.name !== 'id') {
 						soFar[key.name] = parsed[i + 1];
 					}
@@ -102,13 +103,15 @@ Middleware.prototype.getMiddleware = function() {
 				response = response || {};
 				response.status = response.status || 200;
 				if (response.contentType) {
-					logger.warn('The "contentType" response property is deprecated. Use "headers[\'Content-Type\']" instead.');
+					logger.warn(
+						'The "contentType" response property is deprecated. Use "headers[\'Content-Type\']" instead.'
+					);
 				}
 				response.headers = extend(
 					{ 'Content-Type': response.contentType || 'application/json' },
 					response.headers
 				);
-				Object.keys(response.headers).forEach(function(header) {
+				Object.keys(response.headers).forEach((header) => {
 					res.setHeader(header, response.headers[header]);
 				});
 				res.writeHead(response.status);
@@ -121,13 +124,13 @@ Middleware.prototype.getMiddleware = function() {
 			if (rule.path.test(req.url)) {
 				logger.info(req.method, req.url);
 				logger.debug('...matches pattern:', rule.path.source);
-				var params = parseParams(rule.path);
+				let params = parseParams(rule.path);
 				logger.debug('...parsed params:', params);
 				if (req.method === 'GET' || req.method === 'HEAD') {
 					handleResponse(rule[params.id ? 'getItem' : 'getCollection'](params, null, req));
 					return;
 				} else if (req.method === 'POST') {
-					anyBody(req, res, function(err, body) {
+					anyBody(req, res, (err, body) => {
 						if (err) {
 							handleResponse({
 								status: 400,
@@ -140,7 +143,7 @@ Middleware.prototype.getMiddleware = function() {
 					});
 					return;
 				} else if (req.method === 'PUT') {
-					anyBody(req, res, function(err, body) {
+					anyBody(req, res, (err, body) => {
 						if (err) {
 							handleResponse({
 								status: 400,
@@ -153,7 +156,7 @@ Middleware.prototype.getMiddleware = function() {
 					});
 					return;
 				} else if (req.method === 'PATCH') {
-					anyBody(req, res, function(err, body) {
+					anyBody(req, res, (err, body) => {
 						if (err) {
 							handleResponse({
 								status: 400,

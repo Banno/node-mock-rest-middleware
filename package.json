@@ -33,7 +33,7 @@
   "devDependencies": {
     "jasmine": "^2.4.1",
     "supertest": "^1.2.0",
-    "ux-lint": "^1.2.0"
+    "ux-lint": "^1.7.1"
   },
   "repository": {
     "type": "git",

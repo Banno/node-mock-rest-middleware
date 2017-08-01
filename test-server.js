@@ -1,32 +1,36 @@
 #!/usr/bin/env node
 'use strict';
 
-var defaultOpts = {
+const defaultOpts = {
 	default: {
 		port: 8080
 	}
 };
 
-var connect = require('connect');
-var opts = require('minimist')(process.argv.slice(2), defaultOpts);
-var path = require('path');
+const connect = require('connect');
+const opts = require('minimist')(process.argv.slice(2), defaultOpts);
+const path = require('path');
 
 if (opts._.length === 0) {
+	/* eslint-disable no-console */
 	console.log('Usage: ' + path.basename(process.argv[1]) + ' mockModule1 [mockModule2 ...] [--port PORT]');
 	console.log('  Starts a test server using the specified mocks. Defaults to port 8080.');
+	/* eslint-enable no-console */
 	process.exit(0);
 }
 
-var createMocks = require('./');
-var mocks = createMocks();
+const createMocks = require('./');
+const mocks = createMocks();
 mocks.logger.enable();
 
-opts._.forEach(function(module) {
+opts._.forEach((module) => {
 	require(path.resolve(process.cwd(), module))(mocks);
 });
 
-var app = connect();
+const app = connect();
 mocks.useWith(app);
-app.listen(opts.port, function() {
+app.listen(opts.port, () => {
+	/* eslint-disable no-console */
 	console.log(`Starting server at http://localhost:${opts.port}/ ...`);
+	/* eslint-enable no-console */
 });

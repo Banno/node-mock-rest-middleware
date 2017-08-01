@@ -1,26 +1,26 @@
 'use strict';
 
-var middleware = require('../');
-var connect = require('connect');
-var request = require('supertest');
+const middleware = require('../');
+const connect = require('connect');
+const request = require('supertest');
 
-var path = '/foo/:fooId/bar';
-var collection;
+const path = '/foo/:fooId/bar';
+let collection;
 
 exports.createApp = function(opts) {
 	opts = opts || {};
-	var app = connect();
-	var mocks = middleware();
-	var fooId = 'fooIdValue';
+	const app = connect();
+	const mocks = middleware();
+	const fooId = 'fooIdValue';
 	collection = [
 		{ id: 42, foo: 1, bar: 2 },
 		{ id: 49, foo: 5, bar: 6 },
 		{ id: 77, foo: 3, bar: 4 }
 	];
-	var newRule = mocks.addResource(path, collection, opts);
+	const newRule = mocks.addResource(path, collection, opts);
 	// mocks.logger.enable();
 	mocks.useWith(app);
-	var testApp = request(app);
+	const testApp = request(app);
 	return {
 		collection: collection,
 		connectApp: app,

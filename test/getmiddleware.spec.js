@@ -1,43 +1,43 @@
 'use strict';
-describe('getMiddleware()', function() {
+describe('getMiddleware()', () => {
 
-	var app;
-	var extend = require('extend');
-	var finishTest = require('./test-helpers').finishTest;
-	var createApp = require('./test-helpers').createApp;
+	let app;
+	const extend = require('extend');
+	const finishTest = require('./test-helpers').finishTest;
+	const createApp = require('./test-helpers').createApp;
 
-	beforeEach(function() {
+	beforeEach(() => {
 		app = createApp();
 	});
 
-	it('should return an array of functions', function() {
+	it('should return an array of functions', () => {
 		expect(Array.isArray(app.mocks.getMiddleware())).toBe(true);
 		expect(app.mocks.getMiddleware()[0]).toEqual(jasmine.any(Function));
 	});
 
-	it('should work with Connect', function() {
-		var http = require('http');
-		expect(function() {
+	it('should work with Connect', () => {
+		const http = require('http');
+		expect(() => {
 			http.createServer(app.connectApp);
 		}).not.toThrow();
 	});
 
-	it('should allow a Content-Type response header to be specified', function(done) {
-		var customContentType = 'text/plain';
+	it('should allow a Content-Type response header to be specified', (done) => {
+		const customContentType = 'text/plain';
 		spyOn(app.mocks.logger, 'warn');
 		app.rule.postfilter = function(params, response) {
 			response.contentType = customContentType;
 			return response;
 		};
-		app.tester.get(app.path).expect('Content-Type', customContentType).end(function(err, res) {
+		app.tester.get(app.path).expect('Content-Type', customContentType).end((err, res) => {
 			if (!app.mocks.logger.warn.calls.any()) { finishTest(done)('logger.warn() was not called'); }
 			finishTest(done)(err);
 		});
 
 	});
 
-	it('should allow arbitrary response headers to be specified', function(done) {
-		var headers = {
+	it('should allow arbitrary response headers to be specified', (done) => {
+		const headers = {
 			'Content-Type': 'text/plain',
 			'Content-Disposition': 'attachment; filename=example.txt'
 		};
@@ -50,10 +50,10 @@ describe('getMiddleware()', function() {
 			.expect('Content-Disposition', headers['Content-Disposition'], finishTest(done));
 	});
 
-	describe('GET /path', function() {
+	describe('GET /path', () => {
 
-		it('should respond with a JSON object', function(done) {
-			app.tester.get(app.path).end(function(err, res) {
+		it('should respond with a JSON object', (done) => {
+			app.tester.get(app.path).end((err, res) => {
 				// Supertest is pretty broken, so we have to do this in end().
 				// See https://github.com/visionmedia/supertest/issues/253
 				if (typeof res.body !== 'object') { finishTest(done)('body is not an object'); }
@@ -61,40 +61,40 @@ describe('getMiddleware()', function() {
 			});
 		});
 
-		it('should respond with a 200 code', function(done) {
+		it('should respond with a 200 code', (done) => {
 			app.tester.get(app.path).expect(200, finishTest(done));
 		});
 
-		it('should respond with an application/json type', function(done) {
+		it('should respond with an application/json type', (done) => {
 			app.tester.get(app.path).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
-		it('should work with a trailing slash in the path', function(done) {
+		it('should work with a trailing slash in the path', (done) => {
 			app.tester.get(app.path + '/').expect(200, finishTest(done));
 		});
 
-		it('should include the path params when calling the middleware', function(done) {
-			var receivedParams = {};
+		it('should include the path params when calling the middleware', (done) => {
+			let receivedParams = {};
 			app.rule.handler = function(params) {
 				receivedParams = params;
 			};
-			app.tester.get(app.path).end(function(err, res) {
+			app.tester.get(app.path).end((err, res) => {
 				expect(receivedParams.fooId).toBe(app.fooId);
 				finishTest(done)(err);
 			});
 		});
 
-		describe('when the collectionKey and countKey are changed', function() {
+		describe('when the collectionKey and countKey are changed', () => {
 
-			var collectionKey = 'foo';
-			var countKey = 'bar';
+			const collectionKey = 'foo';
+			const countKey = 'bar';
 
-			beforeEach(function() {
+			beforeEach(() => {
 				app = createApp({ collectionKey: collectionKey, countKey: countKey });
 			});
 
-			it('should use those keys in the response', function(done) {
-				var expectedData = {};
+			it('should use those keys in the response', (done) => {
+				let expectedData = {};
 				expectedData[collectionKey] = app.collection;
 				expectedData[countKey] = app.collection.length;
 				app.tester.get(app.path).expect(expectedData, finishTest(done));
@@ -102,14 +102,14 @@ describe('getMiddleware()', function() {
 
 		});
 
-		describe('when the special parameter names are changed', function() {
+		describe('when the special parameter names are changed', () => {
 
-			var offsetParam = 'alt_offset';
-			var limitParam = 'alt_limit';
-			var queryParam = 'alt_query';
-			var params;
+			const offsetParam = 'alt_offset';
+			const limitParam = 'alt_limit';
+			const queryParam = 'alt_query';
+			let params;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				app = createApp({
 					offsetParam: offsetParam,
 					limitParam: limitParam,
@@ -118,27 +118,27 @@ describe('getMiddleware()', function() {
 				params = {};
 			});
 
-			it('should work with a changed "offsetParam"', function(done) {
+			it('should work with a changed "offsetParam"', (done) => {
 				params[offsetParam] = 1;
-				var expectedData = {
+				let expectedData = {
 					items: app.collection.slice(params[offsetParam]),
 					total: app.collection.length
 				};
 				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
 			});
 
-			it('should work with a changed "limitParam"', function(done) {
+			it('should work with a changed "limitParam"', (done) => {
 				params[limitParam] = 1;
-				var expectedData = {
+				let expectedData = {
 					items: app.collection.slice(0, params[limitParam]),
 					total: app.collection.length
 				};
 				app.tester.get(app.path).query(params).expect(expectedData, finishTest(done));
 			});
 
-			it('should work with a changed "queryParam"', function(done) {
+			it('should work with a changed "queryParam"', (done) => {
 				params[queryParam] = '42';
-				var expectedData = {
+				let expectedData = {
 					items: app.collection.slice(0, 1),
 					total: 1
 				};
@@ -147,56 +147,58 @@ describe('getMiddleware()', function() {
 
 		});
 
-		describe('when parameters are specified', function() {
+		describe('when parameters are specified', () => {
 
-			var offset, limit, expectedData;
+			let offset, limit, expectedData;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				offset = 1;
 				limit = 1;
-				var slicedData = app.collection.slice(offset, offset + limit);
+				let slicedData = app.collection.slice(offset, offset + limit);
 				expectedData = {
 					items: slicedData,
 					total: app.collection.length
 				};
 			});
 
-			it('should respond with a slice of the data', function(done) {
+			it('should respond with a slice of the data', (done) => {
 				app.tester.get(app.path).query({ offset: offset, limit: limit }).expect(expectedData, finishTest(done));
 			});
 
-			it('should work with a trailing slash in the path', function(done) {
-				app.tester.get(app.path + '/').query({ offset: offset, limit: limit }).expect(expectedData, finishTest(done));
+			it('should work with a trailing slash in the path', (done) => {
+				app.tester.get(app.path + '/')
+					.query({ offset: offset, limit: limit })
+					.expect(expectedData, finishTest(done));
 			});
 
 		});
 
 	});
 
-	describe('HEAD /path', function() {
+	describe('HEAD /path', () => {
 
-		it('should respond with no data', function(done) {
+		it('should respond with no data', (done) => {
 			app.tester.head(app.path).expect('', finishTest(done));
 		});
 
-		it('should respond with a 200 code', function(done) {
+		it('should respond with a 200 code', (done) => {
 			app.tester.head(app.path).expect(200, finishTest(done));
 		});
 
-		it('should respond with an application/json type', function(done) {
+		it('should respond with an application/json type', (done) => {
 			app.tester.head(app.path).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
-		it('should work with a trailing slash in the path', function(done) {
+		it('should work with a trailing slash in the path', (done) => {
 			app.tester.head(app.path + '/').expect('', finishTest(done));
 		});
 
-		it('should include the path params when calling the middleware', function(done) {
-			var receivedParams = {};
+		it('should include the path params when calling the middleware', (done) => {
+			let receivedParams = {};
 			app.rule.handler = function(params) {
 				receivedParams = params;
 			};
-			app.tester.head(app.path).end(function(err, res) {
+			app.tester.head(app.path).end((err, res) => {
 				expect(receivedParams.fooId).toBe(app.fooId);
 				finishTest(done)(err);
 			});
@@ -204,39 +206,39 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('POST /path', function() {
+	describe('POST /path', () => {
 
-		var newItem = { id: 1, foo: 2, bar: 3 };
-		var post;
+		const newItem = { id: 1, foo: 2, bar: 3 };
+		let post;
 
-		beforeEach(function() {
+		beforeEach(() => {
 			post = function() {
 				return app.tester.post(app.path).send(newItem);
 			};
 		});
 
-		it('should respond with the same item', function(done) {
+		it('should respond with the same item', (done) => {
 			post().expect(newItem, finishTest(done));
 		});
 
-		it('should respond with a 200 code', function(done) {
+		it('should respond with a 200 code', (done) => {
 			post().expect(200, finishTest(done));
 		});
 
-		it('should respond with an application/json type', function(done) {
+		it('should respond with an application/json type', (done) => {
 			post().expect('Content-Type', 'application/json', finishTest(done));
 		});
 
-		it('should work with a trailing slash in the path', function(done) {
+		it('should work with a trailing slash in the path', (done) => {
 			app.tester.post(app.path + '/').send(newItem).expect(newItem, finishTest(done));
 		});
 
-		it('should include the path params when calling the middleware', function(done) {
-			var receivedParams = {};
+		it('should include the path params when calling the middleware', (done) => {
+			let receivedParams = {};
 			app.rule.handler = function(params) {
 				receivedParams = params;
 			};
-			post().end(function(err, res) {
+			post().end((err, res) => {
 				expect(receivedParams.fooId).toBe(app.fooId);
 				finishTest(done)(err);
 			});
@@ -244,37 +246,37 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('GET /path/:id', function() {
+	describe('GET /path/:id', () => {
 
-		describe('when an item with that ID exists', function() {
+		describe('when an item with that ID exists', () => {
 
-			var path;
+			let path;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				path = app.path + '/' + app.collection[0].id;
 			});
 
-			it('should respond with the matching object', function(done) {
+			it('should respond with the matching object', (done) => {
 				app.tester.get(path).expect(app.collection[0], finishTest(done));
 			});
 
-			it('should respond with a 200 code', function(done) {
+			it('should respond with a 200 code', (done) => {
 				app.tester.get(path).expect(200, finishTest(done));
 			});
 
-			it('should respond with an application/json type', function(done) {
+			it('should respond with an application/json type', (done) => {
 				app.tester.get(path).expect('Content-Type', 'application/json', finishTest(done));
 			});
 
-			it('should work with a trailing slash in the path', function(done) {
+			it('should work with a trailing slash in the path', (done) => {
 				app.tester.get(path + '/').expect(app.collection[0], finishTest(done));
 			});
 
 		});
 
-		describe('when an item with that ID cannot be found', function() {
+		describe('when an item with that ID cannot be found', () => {
 
-			it('should respond with a 404 code', function(done) {
+			it('should respond with a 404 code', (done) => {
 				app.tester.get(app.path + '/nonexistent').expect(404, finishTest(done));
 			});
 
@@ -282,37 +284,37 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('HEAD /path/:id', function() {
+	describe('HEAD /path/:id', () => {
 
-		describe('when an item with that ID exists', function() {
+		describe('when an item with that ID exists', () => {
 
-			var path;
+			let path;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				path = app.path + '/' + app.collection[0].id;
 			});
 
-			it('should respond with no data', function(done) {
+			it('should respond with no data', (done) => {
 				app.tester.head(path).expect('', finishTest(done));
 			});
 
-			it('should respond with a 200 code', function(done) {
+			it('should respond with a 200 code', (done) => {
 				app.tester.head(path).expect(200, finishTest(done));
 			});
 
-			it('should respond with an application/json type', function(done) {
+			it('should respond with an application/json type', (done) => {
 				app.tester.head(path).expect('Content-Type', 'application/json', finishTest(done));
 			});
 
-			it('should work with a trailing slash in the path', function(done) {
+			it('should work with a trailing slash in the path', (done) => {
 				app.tester.head(app.path + '/').expect('', finishTest(done));
 			});
 
 		});
 
-		describe('when an item with that ID cannot be found', function() {
+		describe('when an item with that ID cannot be found', () => {
 
-			it('should respond with a 404 code', function(done) {
+			it('should respond with a 404 code', (done) => {
 				app.tester.head(app.path + '/nonexistent').expect(404, finishTest(done));
 			});
 
@@ -320,11 +322,11 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('PUT /path', function() {
+	describe('PUT /path', () => {
 
-		var newCollection, expectedData, put;
+		let newCollection, expectedData, put;
 
-		beforeEach(function() {
+		beforeEach(() => {
 			newCollection = app.collection.slice();
 			newCollection[0].foo = 999;
 
@@ -338,28 +340,28 @@ describe('getMiddleware()', function() {
 			};
 		});
 
-		it('should respond with the new collection', function(done) {
+		it('should respond with the new collection', (done) => {
 			put().expect(expectedData, finishTest(done));
 		});
 
-		it('should respond with a 200 code', function(done) {
+		it('should respond with a 200 code', (done) => {
 			put().expect(200, finishTest(done));
 		});
 
-		it('should respond with an application/json type', function(done) {
+		it('should respond with an application/json type', (done) => {
 			put().expect('Content-Type', 'application/json', finishTest(done));
 		});
 
-		it('should work with a trailing slash in the path', function(done) {
+		it('should work with a trailing slash in the path', (done) => {
 			app.tester.put(app.path + '/').send(newCollection).expect(expectedData, finishTest(done));
 		});
 
-		it('should include the path params when calling the middleware', function(done) {
-			var receivedParams = {};
+		it('should include the path params when calling the middleware', (done) => {
+			let receivedParams = {};
 			app.rule.handler = function(params) {
 				receivedParams = params;
 			};
-			app.tester.put(app.path).send(newCollection).end(function(err, res) {
+			app.tester.put(app.path).send(newCollection).end((err, res) => {
 				expect(receivedParams.fooId).toBe(app.fooId);
 				finishTest(done)(err);
 			});
@@ -367,46 +369,46 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('PUT /path/:id', function() {
+	describe('PUT /path/:id', () => {
 
-		var newItem;
+		let newItem;
 
-		beforeEach(function() {
+		beforeEach(() => {
 			newItem = extend({}, app.collection[0], { foo: 999, bar: undefined });
 		});
 
-		describe('when an item with that ID exists', function() {
+		describe('when an item with that ID exists', () => {
 
-			var path, put;
+			let path, put;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				path = app.path + '/' + app.collection[0].id;
 				put = function() {
 					return app.tester.put(path).send(newItem);
 				};
 			});
 
-			it('should respond with the new object', function(done) {
+			it('should respond with the new object', (done) => {
 				put().expect(newItem, finishTest(done));
 			});
 
-			it('should respond with a 200 code', function(done) {
+			it('should respond with a 200 code', (done) => {
 				put().expect(200, finishTest(done));
 			});
 
-			it('should respond with an application/json type', function(done) {
+			it('should respond with an application/json type', (done) => {
 				put().expect('Content-Type', 'application/json', finishTest(done));
 			});
 
-			it('should work with a trailing slash in the path', function(done) {
+			it('should work with a trailing slash in the path', (done) => {
 				app.tester.put(path + '/').send(newItem).expect(newItem, finishTest(done));
 			});
 
 		});
 
-		describe('when an item with that ID cannot be found', function() {
+		describe('when an item with that ID cannot be found', () => {
 
-			it('should respond with a 404 code', function(done) {
+			it('should respond with a 404 code', (done) => {
 				app.tester.put(app.path + '/nonexistent').send({}).expect(404, finishTest(done));
 			});
 
@@ -414,11 +416,11 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('PATCH /path', function() {
+	describe('PATCH /path', () => {
 
-		var newItems, expectedItems;
+		let newItems, expectedItems;
 
-		beforeEach(function() {
+		beforeEach(() => {
 			newItems = [
 				extend({}, app.collection[0], { foo: 7, bar: undefined }),
 				extend({}, app.collection[1], { baz: 'new prop' })
@@ -429,28 +431,28 @@ describe('getMiddleware()', function() {
 			];
 		});
 
-		it('should respond with the updated objects', function(done) {
+		it('should respond with the updated objects', (done) => {
 			app.tester.patch(app.path).send(newItems).expect(expectedItems, finishTest(done));
 		});
 
-		it('should respond with a 200 code', function(done) {
+		it('should respond with a 200 code', (done) => {
 			app.tester.patch(app.path).send(newItems).expect(200, finishTest(done));
 		});
 
-		it('should respond with an application/json type', function(done) {
+		it('should respond with an application/json type', (done) => {
 			app.tester.patch(app.path).send(newItems).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
-		it('should work with a trailing slash in the path', function(done) {
+		it('should work with a trailing slash in the path', (done) => {
 			app.tester.patch(app.path + '/').send(newItems).expect(expectedItems, finishTest(done));
 		});
 
-		it('should include the path params when calling the middleware', function(done) {
-			var receivedParams = {};
+		it('should include the path params when calling the middleware', (done) => {
+			let receivedParams = {};
 			app.rule.handler = function(params) {
 				receivedParams = params;
 			};
-			app.tester.patch(app.path).send(newItems).end(function(err, res) {
+			app.tester.patch(app.path).send(newItems).end((err, res) => {
 				expect(receivedParams.fooId).toBe(app.fooId);
 				finishTest(done)(err);
 			});
@@ -458,49 +460,49 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('PATCH /path/:id', function() {
+	describe('PATCH /path/:id', () => {
 
-		var newItem, expectedItem;
+		let newItem, expectedItem;
 
-		beforeEach(function() {
+		beforeEach(() => {
 			newItem = extend({}, app.collection[0]);
 			newItem.foo = 999;
 			delete newItem.bar;
 			expectedItem = extend({}, app.collection[0], newItem);
 		});
 
-		describe('when an item with that ID exists', function() {
+		describe('when an item with that ID exists', () => {
 
-			var path, patch;
+			let path, patch;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				path = app.path + '/' + app.collection[0].id;
 				patch = function() {
 					return app.tester.patch(path).send(newItem);
 				};
 			});
 
-			it('should respond with the updated object', function(done) {
+			it('should respond with the updated object', (done) => {
 				patch().expect(expectedItem, finishTest(done));
 			});
 
-			it('should respond with a 200 code', function(done) {
+			it('should respond with a 200 code', (done) => {
 				patch().expect(200, finishTest(done));
 			});
 
-			it('should respond with an application/json type', function(done) {
+			it('should respond with an application/json type', (done) => {
 				patch().expect('Content-Type', 'application/json', finishTest(done));
 			});
 
-			it('should work with a trailing slash in the path', function(done) {
+			it('should work with a trailing slash in the path', (done) => {
 				app.tester.patch(path + '/').send(newItem).expect(expectedItem, finishTest(done));
 			});
 
 		});
 
-		describe('when an item with that ID cannot be found', function() {
+		describe('when an item with that ID cannot be found', () => {
 
-			it('should respond with a 404 code', function(done) {
+			it('should respond with a 404 code', (done) => {
 				app.tester.put(app.path + '/nonexistent').send({}).expect(404, finishTest(done));
 			});
 
@@ -508,35 +510,35 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('DELETE /path', function() {
+	describe('DELETE /path', () => {
 
-		var expectedData = {
+		const expectedData = {
 			items: [],
 			total: 0
 		};
 
-		it('should respond with an empty collection', function(done) {
+		it('should respond with an empty collection', (done) => {
 			app.tester.delete(app.path).expect(expectedData, finishTest(done));
 		});
 
-		it('should respond with a 200 code', function(done) {
+		it('should respond with a 200 code', (done) => {
 			app.tester.delete(app.path).expect(200, finishTest(done));
 		});
 
-		it('should respond with an application/json type', function(done) {
+		it('should respond with an application/json type', (done) => {
 			app.tester.delete(app.path).expect('Content-Type', 'application/json', finishTest(done));
 		});
 
-		it('should work with a trailing slash in the path', function(done) {
+		it('should work with a trailing slash in the path', (done) => {
 			app.tester.delete(app.path + '/').expect(expectedData, finishTest(done));
 		});
 
-		it('should include the path params when calling the middleware', function(done) {
-			var receivedParams = {};
+		it('should include the path params when calling the middleware', (done) => {
+			let receivedParams = {};
 			app.rule.handler = function(params) {
 				receivedParams = params;
 			};
-			app.tester.delete(app.path).end(function(err, res) {
+			app.tester.delete(app.path).end((err, res) => {
 				expect(receivedParams.fooId).toBe(app.fooId);
 				finishTest(done)(err);
 			});
@@ -544,13 +546,13 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('DELETE /path/:id', function() {
+	describe('DELETE /path/:id', () => {
 
-		describe('when an item with that ID exists', function() {
+		describe('when an item with that ID exists', () => {
 
-			var path, del, oldItem;
+			let path, del, oldItem;
 
-			beforeEach(function() {
+			beforeEach(() => {
 				path = app.path + '/' + app.collection[0].id;
 				oldItem = extend({}, app.collection[0]);
 				del = function() {
@@ -558,27 +560,27 @@ describe('getMiddleware()', function() {
 				};
 			});
 
-			it('should respond with the deleted object', function(done) {
+			it('should respond with the deleted object', (done) => {
 				del().expect(oldItem, finishTest(done));
 			});
 
-			it('should respond with a 200 code', function(done) {
+			it('should respond with a 200 code', (done) => {
 				del().expect(200, finishTest(done));
 			});
 
-			it('should respond with an application/json type', function(done) {
+			it('should respond with an application/json type', (done) => {
 				del().expect('Content-Type', 'application/json', finishTest(done));
 			});
 
-			it('should work with a trailing slash in the path', function(done) {
+			it('should work with a trailing slash in the path', (done) => {
 				app.tester.delete(path + '/').expect(oldItem, finishTest(done));
 			});
 
 		});
 
-		describe('when an item with that ID cannot be found', function() {
+		describe('when an item with that ID cannot be found', () => {
 
-			it('should respond with a 404 code', function(done) {
+			it('should respond with a 404 code', (done) => {
 				app.tester.delete(app.path + '/nonexistent').expect(404, finishTest(done));
 			});
 
@@ -586,31 +588,31 @@ describe('getMiddleware()', function() {
 
 	});
 
-	describe('unknown methods', function() {
+	describe('unknown methods', () => {
 
-		it('should respond with a 405 code', function(done) {
+		it('should respond with a 405 code', (done) => {
 			app.tester.options(app.path).expect(405, finishTest(done));
 		});
 
 	});
 
-	describe('when a Content-Type header is set on the request', function() {
+	describe('when a Content-Type header is set on the request', () => {
 
-		it('should allow application/json', function(done) {
+		it('should allow application/json', (done) => {
 			app.tester.post(app.path)
 				.type('application/json')
 				.send({ foobar: '42' })
 				.expect(200, finishTest(done));
 		});
 
-		it('should allow application/x-www-form-urlencoded', function(done) {
+		it('should allow application/x-www-form-urlencoded', (done) => {
 			app.tester.post(app.path)
 				.type('application/x-www-form-urlencoded')
 				.send({ foobar: '42' })
 				.expect(200, finishTest(done));
 		});
 
-		it('should not allow other types', function(done) {
+		it('should not allow other types', (done) => {
 			app.tester.post(app.path)
 				.type('application/x-foobar')
 				.send('foobar')

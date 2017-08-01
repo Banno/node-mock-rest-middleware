@@ -1,7 +1,7 @@
 'use strict';
 
-var extend = require('extend');
-var pkgName = require('./package.json').name;
+const extend = require('extend');
+const pkgName = require('./package.json').name;
 
 module.exports = MiddlewareRule;
 
@@ -17,7 +17,7 @@ function MiddlewareRule(path, collection, opts) {
 		if (typeof item.id !== 'undefined') { return 'id'; }
 
 		// Then look for a property that ends in "Id".
-		var idField = Object.keys(item).reduce(function(currentMatch, currentKey) {
+		let idField = Object.keys(item).reduce((currentMatch, currentKey) => {
 			if (currentMatch) { return currentMatch; }
 			if (currentKey.match(/Id$/)) { return currentKey; }
 			return currentMatch;
@@ -102,9 +102,9 @@ function areEqual(a, b) {
 MiddlewareRule.prototype.handler = null;
 
 MiddlewareRule.prototype.addItem = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filtered = this.prefilter(params, data, req);
+	let filtered = this.prefilter(params, data, req);
 	data = filtered.data;
 
 	this.collection.push(data);
@@ -115,12 +115,12 @@ MiddlewareRule.prototype.addItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.deleteCollection = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
 	this.prefilter(params, data, req);
 	this.collection = [];
 
-	var response = {};
+	let response = {};
 	response[this.collectionKey] = this.collection;
 	response[this.countKey] = this.collection.length;
 	return this.postfilter(params, {
@@ -130,20 +130,20 @@ MiddlewareRule.prototype.deleteCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.deleteItem = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filtered = this.prefilter(params, data, req);
-	var filteredParams = filtered.params;
+	let filtered = this.prefilter(params, data, req);
+	let filteredParams = filtered.params;
 	data = filtered.data;
 
-	var found = null;
+	let found = null;
 	// Should modify the collection in-place.
-	this.collection.forEach(function(item, i) {
+	this.collection.forEach((item, i) => {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
 			found = item;
 			delete this.collection[i];
 		}
-	}.bind(this));
+	});
 	return this.postfilter(params, {
 		status: found ? 200 : 404,
 		data: found
@@ -151,40 +151,41 @@ MiddlewareRule.prototype.deleteItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.extendCollection = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filtered = this.prefilter(params, data, req);
+	let filtered = this.prefilter(params, data, req);
 	data = filtered.data instanceof Array ? filtered.data : [filtered.data];
 
-	var found = [];
-	data.forEach(function(newItem) {
-		this.collection.forEach(function(item, i) {
+	let found = [];
+	data.forEach((newItem) => {
+		this.collection.forEach((item, i) => {
 			if (areEqual(item[this.idKey], newItem[this.idKey])) {
 				extend(this.collection[i], newItem);
 				found.push(this.collection[i]);
 			}
-		}.bind(this));
-	}.bind(this));
-	return this.postfilter(params,  {
+		});
+	});
+	return this.postfilter(params, {
 		status: 200,
 		data: found
 	}, req);
 };
 
 MiddlewareRule.prototype.extendItem = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filtered = this.prefilter(params, data, req);
-	var filteredParams = filtered.params;
+	let filtered = this.prefilter(params, data, req);
+	let filteredParams = filtered.params;
 	data = filtered.data;
 
-	var found = null;
-	this.collection.map(function(item, i) {
+	let found = null;
+	this.collection.map((item, i) => {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
 			found = extend(this.collection[i], data);
 			return found;
 		}
-	}.bind(this));
+		return found; // if no matches are found
+	});
 	return this.postfilter(params, {
 		status: found ? 200 : 404,
 		data: found
@@ -192,24 +193,24 @@ MiddlewareRule.prototype.extendItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.getCollection = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
 	params = params || {}; // mainly for testing; this should always be an object when used with the middleware
-	var filtered = this.prefilter(params, data, req);
-	var filteredParams = filtered.params;
+	let filtered = this.prefilter(params, data, req);
+	let filteredParams = filtered.params;
 	data = filtered.data;
 
 	// Helper function for the special parameters.
-	var getFirstParamValue = function(obj, searchKeys) {
+	let getFirstParamValue = function(obj, searchKeys) {
 		// console.log('getFirstParamValue()', obj, searchKeys);
-		for (var key in obj) {
+		for (let key in obj) {
 			if (obj.hasOwnProperty(key) && searchKeys.indexOf(key) > -1) {
 				return obj[key];
 			}
 		}
 	};
 
-	var specialParams = [].concat(
+	let specialParams = [].concat(
 		this.offsetParams,
 		this.limitParams,
 		this.queryParams,
@@ -217,35 +218,35 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		this.sortDirParams
 	);
 
-	var textSearch = getFirstParamValue(filteredParams, this.queryParams) || null;
+	let textSearch = getFirstParamValue(filteredParams, this.queryParams) || null;
 	if (textSearch) {
 		this.logger.debug('Searching for text', textSearch);
 	}
 
-	var nonSpecialParams = Object.keys(filteredParams).filter(function(key) {
+	let nonSpecialParams = Object.keys(filteredParams).filter((key) => {
 		// Exclude special params.
 		return specialParams.indexOf(key) === -1;
-	}).filter(function(key) {
+	}).filter((key) => {
 		// Exclude custom filters.
-		var customFilterParams = this.paramFilters.map(function(filter) { return filter.param; });
+		let customFilterParams = this.paramFilters.map((filter) => { return filter.param; });
 		return customFilterParams.indexOf(key) === -1;
-	}.bind(this)).filter(function(key) {
+	}).filter((key) => {
 		// Exclude path params.
 		if (!this.path.keys) { return true; }
-		return this.path.keys.every(function(pathKeyInfo) {
+		return this.path.keys.every((pathKeyInfo) => {
 			return pathKeyInfo.name !== key;
 		});
-	}.bind(this));
+	});
 	if (nonSpecialParams.length > 0) {
 		this.logger.debug('Filtering against properties', nonSpecialParams);
 	}
 
-	var filteredCollection = this.collection.filter(function(item) {
-		var matchesAll = true;
+	let filteredCollection = this.collection.filter((item) => {
+		let matchesAll = true;
 
 		// Check against the text query params.
 		if (textSearch) {
-			matchesAll = Object.keys(item).some(function(key) {
+			matchesAll = Object.keys(item).some((key) => {
 				if (item.hasOwnProperty(key)) {
 					return String(item[key]).indexOf(textSearch) > -1;
 				}
@@ -254,27 +255,27 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		}
 
 		// Check against any non-special query params.
-		nonSpecialParams.forEach(function(key) {
+		nonSpecialParams.forEach((key) => {
 			matchesAll = matchesAll && (
 				typeof filteredParams[key] === 'undefined' || areEqual(item[key], filteredParams[key])
 			);
 		});
 
 		// Check against any custom filters.
-		this.paramFilters.forEach(function(filterInfo) {
-			var val = filteredParams[filterInfo.param];
+		this.paramFilters.forEach((filterInfo) => {
+			let val = filteredParams[filterInfo.param];
 			matchesAll = matchesAll && filterInfo.filter(item, val);
 		}, this);
 
 		return matchesAll;
-	}.bind(this));
+	});
 
-	var sortBy = getFirstParamValue(filteredParams, this.sortByParams);
+	let sortBy = getFirstParamValue(filteredParams, this.sortByParams);
 	if (sortBy) {
 		this.logger.debug('Sorting by', sortBy);
-		var sortDir = (getFirstParamValue(filteredParams, this.sortDirParams) || 'asc').toLowerCase();
+		let sortDir = (getFirstParamValue(filteredParams, this.sortDirParams) || 'asc').toLowerCase();
 		this.logger.debug('Sorting in direction', sortDir);
-		filteredCollection.sort(function(a, b) {
+		filteredCollection.sort((a, b) => {
 			if (sortDir === 'desc') {
 				if (a[sortBy] > b[sortBy]) { return -1; }
 				if (a[sortBy] < b[sortBy]) { return 1; }
@@ -286,13 +287,13 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 		});
 	}
 
-	var offset = getFirstParamValue(filteredParams, this.offsetParams);
+	let offset = getFirstParamValue(filteredParams, this.offsetParams);
 	offset = offset ? parseInt(offset, 10) : 0;
-	var limit = getFirstParamValue(filteredParams, this.limitParams);
+	let limit = getFirstParamValue(filteredParams, this.limitParams);
 	limit = limit ? parseInt(limit, 10) : this.collection.length;
 	this.logger.debug('Returning collection of', limit, 'items, starting at offset', offset);
-	var itemsSubset = filteredCollection.slice(offset, offset + limit);
-	var response = {};
+	let itemsSubset = filteredCollection.slice(offset, offset + limit);
+	let response = {};
 	response[this.collectionKey] = itemsSubset;
 	response[this.countKey] = filteredCollection.length;
 	return this.postfilter(params, {
@@ -302,15 +303,15 @@ MiddlewareRule.prototype.getCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.getItem = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filteredInput = this.prefilter(params, data, req);
-	var filteredParams = filteredInput.params;
+	let filteredInput = this.prefilter(params, data, req);
+	let filteredParams = filteredInput.params;
 	data = filteredInput.data;
 
-	var filtered = this.collection.filter(function(item) {
+	let filtered = this.collection.filter((item) => {
 		return areEqual(item[this.idKey], filteredParams.id);
-	}.bind(this));
+	});
 	return this.postfilter(params, {
 		status: filtered.length > 0 ? 200 : 404,
 		data: filtered[0]
@@ -318,11 +319,11 @@ MiddlewareRule.prototype.getItem = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.replaceCollection = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filtered = this.prefilter(params, data, req);
+	let filtered = this.prefilter(params, data, req);
 	this.collection = filtered.data instanceof Array ? filtered.data : [filtered.data];
-	var response = {};
+	let response = {};
 	response[this.collectionKey] = this.collection;
 	response[this.countKey] = this.collection.length;
 	return this.postfilter(params, {
@@ -332,17 +333,18 @@ MiddlewareRule.prototype.replaceCollection = function(params, data, req) {
 };
 
 MiddlewareRule.prototype.replaceItem = function(params, data, req) {
-	if (this.handler) { return this.handler.apply(this, arguments); }
+	if (this.handler) { return this.handler(params, data, req); }
 
-	var filtered = this.prefilter(params, data, req);
-	var filteredParams = filtered.params;
-	var found = null;
-	this.collection.map(function(item, i) {
+	let filtered = this.prefilter(params, data, req);
+	let filteredParams = filtered.params;
+	let found = null;
+	this.collection.map((item, i) => {
 		if (areEqual(item[this.idKey], filteredParams.id)) {
 			found = this.collection[i] = data;
 			return found;
 		}
-	}.bind(this));
+		return found; // if no matches are found
+	});
 	return this.postfilter(params, {
 		status: found ? 200 : 404,
 		data: found

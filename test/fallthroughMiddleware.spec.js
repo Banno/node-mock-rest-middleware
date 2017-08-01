@@ -1,10 +1,10 @@
 'use strict';
-describe('fallthroughMiddleware()', function() {
+describe('fallthroughMiddleware()', () => {
 
-	var app, req, res, next;
-	var createApp = require('./test-helpers').createApp;
+	let app, req, res, next;
+	const createApp = require('./test-helpers').createApp;
 
-	beforeEach(function() {
+	beforeEach(() => {
 		req = {};
 		res = {};
 		next = jasmine.createSpy('next');
@@ -13,11 +13,11 @@ describe('fallthroughMiddleware()', function() {
 		app.mocks.fallthroughMiddleware(req, res, next);
 	});
 
-	it('should continue to the next middleware', function() {
+	it('should continue to the next middleware', () => {
 		expect(next).toHaveBeenCalled();
 	});
 
-	it('should log a message', function() {
+	it('should log a message', () => {
 		expect(app.mocks.logger.debug).toHaveBeenCalled();
 	});
 

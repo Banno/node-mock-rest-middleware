@@ -1,6 +1,12 @@
 {
-	"jshint": {
-		"node": true,
-		"esversion": 6
+	"eslint": {
+		"env": {
+			"browser": false,
+			"node": true
+		}
+		"rules": {
+			"indent": ["error", "tab"],
+			"no-magic-numbers": "off"
+		}
 	}
 }

@@ -9,6 +9,8 @@
 
 ## Usage
 
+Node.js v6 or higher is required.
+
 First install the module:
 
 ```shell
